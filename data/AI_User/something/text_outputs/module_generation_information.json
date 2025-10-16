@@ -1,0 +1,26 @@
+{
+  "course": {
+    "course_title": "AI User",
+    "course_objectives": "h"
+  },
+  "project": {
+    "module_title": "something",
+    "module_description": "a",
+    "project_title": "a",
+    "project_goal": "a",
+    "project_learning_objectives": "a"
+  },
+  "motivation": {},
+  "audience": {
+    "student_description": "a",
+    "education_level": "undergrad_intro",
+    "prerequisites": "some stuff",
+    "class_size": 25
+  },
+  "style_pack": {
+    "palette": "blue",
+    "vibe": "flat_illustration",
+    "aspect_ratio": "4:3"
+  },
+  "additional_info": "s"
+}
