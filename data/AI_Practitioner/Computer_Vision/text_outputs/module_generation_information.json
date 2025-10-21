@@ -1,0 +1,25 @@
+{
+  "course": {
+    "course_title": "AI Practitioner",
+    "course_objectives": "..."
+  },
+  "project": {
+    "module_title": "Computer Vision",
+    "module_description": "...",
+    "project_title": "Image Segmentation",
+    "project_goal": "..",
+    "project_learning_objectives": ".."
+  },
+  "audience": {
+    "student_description": "army",
+    "education_level": "undergrad_intro",
+    "prerequisites": "pytorch",
+    "class_size": 25
+  },
+  "style_pack": {
+    "palette": "blue",
+    "vibe": "flat_illustration",
+    "aspect_ratio": "4:3"
+  },
+  "additional_info": ""
+}

@@ -1,0 +1,24 @@
+{
+  "course": {
+    "course_title": "AI User",
+    "course_objectives": ""
+  },
+  "project": {
+    "module_title": "Neural Networks",
+    "module_description": "",
+    "project_title": "Intro",
+    "project_goal": "Goals",
+    "project_learning_objectives": ""
+  },
+  "audience": {
+    "student_description": "Army veterans with limited computer science experience",
+    "education_level": "undergrad_intro",
+    "prerequisites": "",
+    "class_size": 25
+  },
+  "style_pack": {
+    "palette": "blue",
+    "vibe": "flat_illustration",
+    "aspect_ratio": "4:3"
+  }
+}

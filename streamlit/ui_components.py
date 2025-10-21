@@ -56,13 +56,9 @@ def display_progress():
             "Course Information",
             "Project Information", 
             "Audience Details",
-            "Style Preferences",
             "Review & Save",
             "Next Phase",
-            "Scenario Generation",
-            "Screen Management",
-            "Image Generation",
-            "Final Review"
+            "Scenario Generation"
         ]
         
         progress = (st.session_state.current_step - 1) / len(steps)

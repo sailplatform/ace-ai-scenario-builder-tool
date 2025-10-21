@@ -7,13 +7,9 @@ from steps import (
     step_course_info,
     step_project_info,
     step_audience_info,
-    step_style_pack,
     step_review_export,
     step_next_phase,
-    step_scenario_generation,
-    step_screen_management,
-    step_image_generation,
-    step_final_review
+    step_scenario_generation
 )
 
 # Page configuration
@@ -47,19 +43,11 @@ def main():
     elif st.session_state.current_step == 3:
         step_audience_info()
     elif st.session_state.current_step == 4:
-        step_style_pack()
-    elif st.session_state.current_step == 5:
         step_review_export()
-    elif st.session_state.current_step == 6:
+    elif st.session_state.current_step == 5:
         step_next_phase()
-    elif st.session_state.current_step == 7:
+    elif st.session_state.current_step == 6:
         step_scenario_generation()
-    elif st.session_state.current_step == 8:
-        step_screen_management()
-    elif st.session_state.current_step == 9:
-        step_image_generation()
-    elif st.session_state.current_step == 10:
-        step_final_review()
 
 if __name__ == "__main__":
     main()

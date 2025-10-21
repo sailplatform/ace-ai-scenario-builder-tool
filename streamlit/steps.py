@@ -4,6 +4,7 @@ Step functions for the AI Scenario Builder Tool workflow.
 import json
 import os
 import streamlit as st
+import openai
 from utils import get_existing_courses, get_existing_modules, save_to_json
 from config import get_default_form_data
 from scenario_writer import (
@@ -15,6 +16,110 @@ from scenario_writer import (
     load_scenario_data,
     get_scenario_filepath
 )
+
+
+def generate_scenario_summaries_with_gpt(form_data, existing_scenario_data):
+    """
+    Generate three short scenario summaries using GPT-4.1 based on form data and existing scenario data.
+    """
+    try:
+        # Set up OpenAI client
+        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
+        # Extract key information from form data
+        course_title = form_data.get("course", {}).get("course_title", "")
+        project_title = form_data.get("project", {}).get("project_title", "")
+        project_goal = form_data.get("project", {}).get("project_goal", "")
+        student_description = form_data.get("audience", {}).get("student_description", "")
+        education_level = form_data.get("audience", {}).get("education_level", "")
+        
+        # Extract existing scenario context if available
+        existing_description = existing_scenario_data.get("scenario_description", "") if existing_scenario_data else ""
+        
+        # Create the prompt for GPT-4.1
+        prompt = f"""
+You are an expert educational scenario designer. Based on the following course and project information, generate exactly 3 short, engaging scenario summaries that would motivate students to complete this project.
+
+Course: {course_title}
+Project: {project_title}
+Project Goal: {project_goal}
+Student Profile: {student_description}
+Education Level: {education_level}
+
+Existing Scenario Context: {existing_description}
+
+Generate 3 distinct scenario summaries (2-3 sentences long) that:
+1. Are realistic and relatable to the target student audience
+2. Present a clear challenge or problem to solve
+3. Connect to the project goals and learning objectives
+4. Are engaging and motivating
+5. Are appropriate for the education level
+6. Include DIVERSE characters (represent different ethnicities, genders, ages, backgrounds)
+7. Specify the backdrop/setting where the scenario takes place
+8. Focus on LEARNING GOALS and real-world applications
+9. Show how the scenario connects to practical, industry-relevant skills
+
+IMPORTANT: Each scenario must:
+- Include diverse characters (avoid only white/male characters)
+- Specify the setting/backdrop (e.g., "in a tech startup", "at a community center", "in a research lab")
+- Clearly connect to the learning objectives and real-world applications
+- Explain how the scenario motivates learning and provides context for where skills are used
+- Keep character details brief - focus on the learning connection, not detailed expressions
+
+Format your response as:
+SCENARIO 1: [summary with diverse characters, setting, and learning connection]
+SCENARIO 2: [summary with diverse characters, setting, and learning connection] 
+SCENARIO 3: [summary with diverse characters, setting, and learning connection]
+"""
+        
+        # Call GPT-4.1
+        response = client.chat.completions.create(
+            model="gpt-4-1106-preview",  # GPT-4.1 model
+            messages=[
+                {"role": "system", "content": """You are an expert educational scenario designer who creates engaging, realistic scenarios for student projects. 
+
+CONTEXT EXAMPLE: safeChats is a fast-growing social media platform with active users worldwide. Their Trust and Safety team needs help strengthening content moderation systems and reducing costs. Currently, they use traditional sentiment analysis that flags posts as hate speech or not, but provides no explanations. Users complain about unfair flagging, and human reviewers spend extra time interpreting decisions. Their system also performs poorly in other languages. They're exploring Generative AI and LLMs because these can understand context, sarcasm, and nuance in multiple languages, explain reasoning in natural language, suggest better moderation responses, and continuously improve through feedback loops.
+
+Your scenarios should focus on real-world applications and learning connections, not detailed character descriptions."""},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=800,
+            temperature=0.7
+        )
+        
+        # Parse the response
+        content = response.choices[0].message.content
+        
+        # Extract the three scenarios
+        scenarios = []
+        lines = content.split('\n')
+        current_scenario = ""
+        
+        for line in lines:
+            line = line.strip()
+            if line.startswith("SCENARIO 1:") or line.startswith("SCENARIO 2:") or line.startswith("SCENARIO 3:"):
+                if current_scenario:
+                    scenarios.append(current_scenario.strip())
+                current_scenario = line.replace("SCENARIO 1:", "").replace("SCENARIO 2:", "").replace("SCENARIO 3:", "").strip()
+            elif current_scenario and line:
+                current_scenario += " " + line
+        
+        if current_scenario:
+            scenarios.append(current_scenario.strip())
+        
+        # Ensure we have exactly 3 scenarios
+        while len(scenarios) < 3:
+            scenarios.append("Additional scenario could not be generated.")
+        
+        return scenarios[:3]
+        
+    except Exception as e:
+        st.error(f"Error generating scenarios with GPT: {str(e)}")
+        return [
+            "Scenario generation failed. Please try again or contact support.",
+            "Unable to generate scenario at this time.",
+            "Error occurred during scenario generation."
+        ]
 
 
 def step_initial_selection():
@@ -135,8 +240,8 @@ def step_existing_content_selection():
                         st.session_state.form_data = existing_data
                         st.session_state.workflow_mode = "existing_module"
                         
-                        # Skip directly to step 6 since both course and module exist
-                        st.session_state.current_step = 6
+                        # Skip directly to step 5 (Next Phase) since both course and module exist
+                        st.session_state.current_step = 5
                         st.rerun()
                     except Exception as e:
                         st.error(f"❌ Could not load existing configuration: {str(e)}")
@@ -160,16 +265,16 @@ def step_course_info():
         )
         
         course_objectives = st.text_area(
-            "Course Learning Objectives *",
+            "Course Learning Objectives (Optional)",
             value=st.session_state.form_data["course"].get("course_objectives", ""),
-            help="List the main learning objectives for this course (one per line or separated by commas)",
+            help="List main learning objectives (one per line or comma separated)",
             height=100
         )
         
         submitted = st.form_submit_button("Continue to Project Information", type="primary")
         
         if submitted:
-            if course_title and course_objectives:
+            if course_title:
                 st.session_state.form_data["course"] = {
                     "course_title": course_title,
                     "course_objectives": course_objectives
@@ -177,7 +282,7 @@ def step_course_info():
                 st.session_state.current_step = 2
                 st.rerun()
             else:
-                st.error("Please fill in all required fields (marked with *)")
+                st.error("Please enter a course title")
 
 
 def step_project_info():
@@ -196,7 +301,7 @@ def step_project_info():
         )
         
         module_description = st.text_area(
-            "Module Description *",
+            "Module Description (Optional)",
             value=st.session_state.form_data["project"].get("module_description", ""),
             help="Brief description of what this module covers",
             height=80
@@ -218,7 +323,7 @@ def step_project_info():
         )
         
         project_learning_objectives = st.text_area(
-            "Project Learning Objectives *",
+            "Project Learning Objectives (Optional)",
             value=st.session_state.form_data["project"].get("project_learning_objectives", ""),
             help="Specific learning objectives for this project (one per line or separated by commas)",
             height=100
@@ -234,7 +339,7 @@ def step_project_info():
         with col2:
             submitted = st.form_submit_button("Continue to Audience →", type="primary")
             if submitted:
-                if all([module_title, module_description, project_title, project_goal, project_learning_objectives]):
+                if all([module_title, project_title, project_goal]):
                     st.session_state.form_data["project"] = {
                         "module_title": module_title,
                         "module_description": module_description,
@@ -245,7 +350,7 @@ def step_project_info():
                     st.session_state.current_step = 3
                     st.rerun()
                 else:
-                    st.error("Please fill in all required fields (marked with *)")
+                    st.error("Please fill in module title, project title, and project goal")
 
 
 def step_audience_info():
@@ -260,6 +365,7 @@ def step_audience_info():
             "Student Description *",
             value=st.session_state.form_data["audience"].get("student_description", ""),
             help="Describe who your students are (background, experience level, etc.)",
+            placeholder="e.g., Army veterans with limited computer science experience",
             height=80
         )
         
@@ -275,7 +381,7 @@ def step_audience_info():
             help="Select the most appropriate education level"
         )
         
-        st.subheader("Prerequisites")
+        st.subheader("Prerequisites (Optional)")
         st.markdown("What should students know before starting this project?")
         
         # Single text area for all prerequisites
@@ -304,7 +410,7 @@ def step_audience_info():
                 st.rerun()
         
         with col2:
-            submitted = st.form_submit_button("Continue to Style →", type="primary")
+            submitted = st.form_submit_button("Continue to Review →", type="primary")
             if submitted:
                 if student_description and education_level:
                     st.session_state.form_data["audience"] = {
@@ -319,92 +425,92 @@ def step_audience_info():
                     st.error("Please fill in the student description and education level")
 
 
-def step_style_pack():
-    """Step 4: Style Preferences"""
-    st.markdown('<div class="step-header">🎨 Style Preferences</div>', unsafe_allow_html=True)
-    st.markdown('<div class="step-description">Define the visual style and additional information for your motivation slides.</div>', unsafe_allow_html=True)
+# def step_style_pack():
+#     """Step 4: Style Preferences"""
+#     st.markdown('<div class="step-header">🎨 Style Preferences</div>', unsafe_allow_html=True)
+#     st.markdown('<div class="step-description">Define the visual style and additional information for your motivation slides.</div>', unsafe_allow_html=True)
     
-    with st.form("style_pack_form"):
-        st.subheader("Visual Style")
+#     with st.form("style_pack_form"):
+#         st.subheader("Visual Style")
         
-        # Style reference guide
-        with st.expander("📚 Style Reference Guide", expanded=False):
-            st.markdown("""
-            **Common Color Palettes:**
-            - `cool contrast` - blue and teal, navy and cyan
-            - `warm contrast` - red and orange, coral and gold
-            - `vibrant duo` - purple and yellow, magenta and lime
-            - `earth duo` - brown and olive, tan and forest
+#         # Style reference guide
+#         with st.expander("📚 Style Reference Guide", expanded=False):
+#             st.markdown("""
+#             **Common Color Palettes:**
+#             - `cool contrast` - blue and teal, navy and cyan
+#             - `warm contrast` - red and orange, coral and gold
+#             - `vibrant duo` - purple and yellow, magenta and lime
+#             - `earth duo` - brown and olive, tan and forest
 
-            **Visual Style Examples:**
-            - `comic panel style` - bold outlines, limited shading, expressive poses
-            - `flat illustration design` - simple shapes, clean fills, minimal detail
-            - `semi realistic rendering` - stylized proportions, moderate detail
-            - `photo realistic imagery` - lifelike textures, accurate lighting
-            - `minimalist visual language` - ample whitespace, few elements
-            - `hand drawn sketch style` - pencil or ink lines, textured strokes
-            - `three dimensional render` - modeled forms, perspective and lighting
+#             **Visual Style Examples:**
+#             - `comic panel style` - bold outlines, limited shading, expressive poses
+#             - `flat illustration design` - simple shapes, clean fills, minimal detail
+#             - `semi realistic rendering` - stylized proportions, moderate detail
+#             - `photo realistic imagery` - lifelike textures, accurate lighting
+#             - `minimalist visual language` - ample whitespace, few elements
+#             - `hand drawn sketch style` - pencil or ink lines, textured strokes
+#             - `three dimensional render` - modeled forms, perspective and lighting
 
-            **Aspect Ratios:**
-            - `4:3` - traditional presentation format
-            - `16:9` - widescreen format
-            - `1:1` - square format
-            - `3:2` - photo format
-            """)
+#             **Aspect Ratios:**
+#             - `4:3` - traditional presentation format
+#             - `16:9` - widescreen format
+#             - `1:1` - square format
+#             - `3:2` - photo format
+#             """)
         
-        col1, col2 = st.columns(2)
+#         col1, col2 = st.columns(2)
         
-        with col1:
-            palette = st.text_input(
-                "Color Palette",
-                value=st.session_state.form_data["style_pack"].get("palette", "blue"),
-                help="Enter your preferred color palette (see reference guide above)"
-            )
+#         with col1:
+#             palette = st.text_input(
+#                 "Color Palette",
+#                 value=st.session_state.form_data["style_pack"].get("palette", "blue"),
+#                 help="Enter your preferred color palette (see reference guide above)"
+#             )
             
-            vibe = st.text_input(
-                "Visual Style",
-                value=st.session_state.form_data["style_pack"].get("vibe", "flat_illustration"),
-                help="Enter your preferred visual style (see reference guide above)"
-            )
+#             vibe = st.text_input(
+#                 "Visual Style",
+#                 value=st.session_state.form_data["style_pack"].get("vibe", "flat_illustration"),
+#                 help="Enter your preferred visual style (see reference guide above)"
+#             )
         
-        with col2:
-            aspect_ratio = st.text_input(
-                "Aspect Ratio",
-                value=st.session_state.form_data["style_pack"].get("aspect_ratio", "4:3"),
-                help="Enter your preferred aspect ratio (see reference guide above)"
-            )
+#         with col2:
+#             aspect_ratio = st.text_input(
+#                 "Aspect Ratio",
+#                 value=st.session_state.form_data["style_pack"].get("aspect_ratio", "4:3"),
+#                 help="Enter your preferred aspect ratio (see reference guide above)"
+#             )
         
-        st.subheader("Additional Information")
+#         st.subheader("Additional Information")
         
-        additional_info = st.text_area(
-            "Additional Details",
-            value=st.session_state.form_data.get("additional_info", ""),
-            help="Specify any additional information such as characters, specific themes, cultural considerations, etc.",
-            height=120
-        )
+#         additional_info = st.text_area(
+#             "Additional Details",
+#             value=st.session_state.form_data.get("additional_info", ""),
+#             help="Specify any additional information such as characters, specific themes, cultural considerations, etc.",
+#             height=120
+#         )
         
-        col1, col2 = st.columns(2)
-        with col1:
-            submitted = st.form_submit_button("← Back to Audience", type="secondary")
-            if submitted:
-                st.session_state.current_step = 3
-                st.rerun()
+#         col1, col2 = st.columns(2)
+#         with col1:
+#             submitted = st.form_submit_button("← Back to Audience", type="secondary")
+#             if submitted:
+#                 st.session_state.current_step = 3
+#                 st.rerun()
         
-        with col2:
-            submitted = st.form_submit_button("Review & Continue →", type="primary")
-            if submitted:
-                st.session_state.form_data["style_pack"] = {
-                    "palette": palette,
-                    "vibe": vibe,
-                    "aspect_ratio": aspect_ratio
-                }
-                st.session_state.form_data["additional_info"] = additional_info
-                st.session_state.current_step = 5
-                st.rerun()
+#         with col2:
+#             submitted = st.form_submit_button("Review & Continue →", type="primary")
+#             if submitted:
+#                 st.session_state.form_data["style_pack"] = {
+#                     "palette": palette,
+#                     "vibe": vibe,
+#                     "aspect_ratio": aspect_ratio
+#                 }
+#                 st.session_state.form_data["additional_info"] = additional_info
+#                 st.session_state.current_step = 5
+#                 st.rerun()
 
 
 def step_review_export():
-    """Step 5: Review and Save Configuration"""
+    """Step 4: Review and Save Configuration"""
     st.markdown('<div class="step-header">📋 Review & Save Configuration</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Review your information and save the configuration to continue with the workflow.</div>', unsafe_allow_html=True)
     
@@ -430,15 +536,7 @@ def step_review_export():
     if audience_data.get('class_size'):
         st.markdown(f"**Class Size:** {audience_data.get('class_size')}")
     
-    st.subheader("🎨 Style Preferences")
-    style_data = st.session_state.form_data["style_pack"]
-    st.markdown(f"**Color Palette:** {style_data.get('palette', 'blue')}")
-    st.markdown(f"**Visual Style:** {style_data.get('vibe', 'flat_illustration').replace('_', ' ').title()}")
-    st.markdown(f"**Aspect Ratio:** {style_data.get('aspect_ratio', '4:3')}")
-    
-    if st.session_state.form_data.get("additional_info"):
-        st.subheader("📝 Additional Information")
-        st.markdown(f"**Additional Details:** {st.session_state.form_data.get('additional_info', 'Not provided')}")
+    # Style preferences removed for now per updated workflow
     
     # Save and continue options
     st.subheader("💾 Save Configuration")
@@ -446,8 +544,8 @@ def step_review_export():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("← Back to Style", type="secondary"):
-            st.session_state.current_step = 4
+        if st.button("← Back to Audience", type="secondary"):
+            st.session_state.current_step = 3
             st.rerun()
     
     with col2:
@@ -458,7 +556,7 @@ def step_review_export():
                 st.info(f"📁 Saved to: `{filepath}`")
                 
                 # Move to next step in workflow
-                st.session_state.current_step = 6
+                st.session_state.current_step = 5
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Error saving configuration: {str(e)}")
@@ -476,7 +574,7 @@ def step_review_export():
 
 
 def step_next_phase():
-    """Step 6: Next Phase - Scenario Generation"""
+    """Step 5: Next Phase - Scenario Generation"""
     st.markdown('<div class="step-header">🚀 Next Phase: Scenario Generation</div>', unsafe_allow_html=True)
     
     # Check if this is from existing module or newly saved
@@ -523,24 +621,6 @@ def step_next_phase():
     
     """)
     
-    st.subheader("⚙️ Workflow Status")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.success("✅ Configuration Complete")
-        st.caption("Project details saved")
-    
-    with col2:
-        st.info("⏳ Ready for Generation")
-        st.caption("Next: Scenario creation")
-    
-    with col3:
-        st.info("⏳ Pending")
-        st.caption("Image generation")
-    
-    st.markdown("---")
-    
     col1, col2 = st.columns(2)
     
     with col1:
@@ -552,7 +632,7 @@ def step_next_phase():
     
     with col2:
         if st.button("📋 View Configuration", type="primary"):
-            st.session_state.current_step = 5
+            st.session_state.current_step = 4
             st.rerun()
     
     # Add new button to start scenario generation
@@ -560,349 +640,122 @@ def step_next_phase():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("🚀 Start Scenario Generation", type="primary", use_container_width=True):
-            st.session_state.current_step = 7
+            st.session_state.current_step = 6
+            st.session_state.scenarios_need_generation = True
             st.rerun()
 
 
 def step_scenario_generation():
-    """Step 7: Generate Scenario Description and Image Vibe"""
+    """Step 6: Generate Scenario Description and Image Vibe"""
     st.markdown('<div class="step-header">📝 Scenario Generation</div>', unsafe_allow_html=True)
-    st.markdown('<div class="step-description">Generate scenario description and image vibe based on your project brief.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-description">Generate three scenario options using AI and select the best one for your project.</div>', unsafe_allow_html=True)
     
     # Check if scenario data already exists
     scenario_filepath = get_scenario_filepath(st.session_state.form_data)
     existing_scenario_data = load_scenario_data(scenario_filepath)
     
-    if existing_scenario_data:
-        st.info("📁 Existing scenario data found. You can regenerate or continue with existing data.")
+    # Initialize scenario data if not exists
+    if not hasattr(st.session_state, 'scenario_data') or not st.session_state.scenario_data:
+        st.session_state.scenario_data = existing_scenario_data or {}
+    
+    # Initialize generation flag if not exists
+    if "scenarios_need_generation" not in st.session_state:
+        st.session_state.scenarios_need_generation = True
+    
+    # Only generate new scenarios when flag is True
+    if st.session_state.scenarios_need_generation:
+        with st.spinner("🤖 Generating scenario options with AI..."):
+            try:
+                scenarios = generate_scenario_summaries_with_gpt(st.session_state.form_data, existing_scenario_data)
+                st.session_state.scenario_data["generated_scenarios"] = scenarios
+                st.session_state.scenario_data["selected_scenario"] = None
+                st.session_state.scenarios_need_generation = False
+            except Exception as e:
+                st.error(f"❌ Error generating scenarios: {str(e)}")
+                return
+    
+    # Display the three scenario options
+    st.subheader("🎯 Choose Your Scenario")
+    st.markdown("Select one of the AI-generated scenarios below, or edit it to better fit your needs:")
+    
+    scenarios = st.session_state.scenario_data.get("generated_scenarios", [])
+    selected_scenario = st.session_state.scenario_data.get("selected_scenario", None)
+    
+    # Display scenarios in columns
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("**Scenario Option 1**")
+        if st.button("Select Option 1", key="select_1", type="primary" if selected_scenario == 0 else "secondary"):
+            st.session_state.scenario_data["selected_scenario"] = 0
+            st.rerun()
+        st.info(scenarios[0] if len(scenarios) > 0 else "No scenario available")
+    
+    with col2:
+        st.markdown("**Scenario Option 2**")
+        if st.button("Select Option 2", key="select_2", type="primary" if selected_scenario == 1 else "secondary"):
+            st.session_state.scenario_data["selected_scenario"] = 1
+            st.rerun()
+        st.info(scenarios[1] if len(scenarios) > 1 else "No scenario available")
+    
+    with col3:
+        st.markdown("**Scenario Option 3**")
+        if st.button("Select Option 3", key="select_3", type="primary" if selected_scenario == 2 else "secondary"):
+            st.session_state.scenario_data["selected_scenario"] = 2
+            st.rerun()
+        st.info(scenarios[2] if len(scenarios) > 2 else "No scenario available")
+    
+    # Show selected scenario and allow editing
+    if selected_scenario is not None:
+        st.markdown("---")
+        st.subheader("✏️ Edit Your Selected Scenario")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔄 Regenerate Scenario", type="primary"):
-                # Clear existing data and regenerate
-                existing_scenario_data = {}
-                st.rerun()
+        # Text area for editing the selected scenario
+        edited_scenario = st.text_area(
+            "Edit your scenario:",
+            value=scenarios[selected_scenario] if selected_scenario < len(scenarios) else "",
+            height=100,
+            key="edit_scenario"
+        )
         
-        with col2:
-            if st.button("➡️ Continue with Existing", type="secondary"):
-                st.session_state.scenario_data = existing_scenario_data
-                st.session_state.current_step = 8
-                st.rerun()
-    
-    # Generate new scenario data
-    if not existing_scenario_data:
-        with st.spinner("Generating scenario description and image vibe..."):
-            # Generate scenario description
-            scenario_description = generate_scenario_description(st.session_state.form_data)
-            
-            # Generate image vibe
-            image_vibe = generate_image_vibe(st.session_state.form_data.get("style_pack", {}))
-            
-            # Store in session state
-            st.session_state.scenario_data = {
-                "scenario_description": scenario_description,
-                "image_vibe": image_vibe,
-                "screens": [],
-                "generated_at": str(st.session_state.get("current_time", "unknown"))
-            }
-    
-    # Display generated content
-    st.subheader("📝 Generated Scenario Description")
-    st.markdown(st.session_state.scenario_data.get("scenario_description", "No description generated"))
-    
-    st.subheader("🎨 Generated Image Vibe")
-    st.markdown(st.session_state.scenario_data.get("image_vibe", "No vibe generated"))
+        # Update the scenario data
+        if edited_scenario != scenarios[selected_scenario]:
+            st.session_state.scenario_data["generated_scenarios"][selected_scenario] = edited_scenario
+            st.session_state.scenario_data["final_scenario"] = edited_scenario
+        
+        # Display final scenario
+        st.subheader("📝 Final Scenario")
+        st.success(edited_scenario)
     
     # Navigation buttons
+    st.markdown("---")
     col1, col2, col3 = st.columns(3)
     
     with col1:
         if st.button("← Back to Next Phase", type="secondary"):
-            st.session_state.current_step = 6
+            st.session_state.current_step = 5
             st.rerun()
     
     with col2:
         if st.button("💾 Save & Continue", type="primary"):
-            try:
-                # Save scenario data
-                save_scenario_data(st.session_state.scenario_data, scenario_filepath)
-                st.success("✅ Scenario data saved successfully!")
-                st.session_state.current_step = 8
-                st.rerun()
-            except Exception as e:
-                st.error(f"❌ Error saving scenario data: {str(e)}")
-    
-    with col3:
-        if st.button("🔄 Regenerate", type="secondary"):
-            # Clear and regenerate
-            st.session_state.scenario_data = {}
-            st.rerun()
-
-
-def step_screen_management():
-    """Step 8: Manage Screens - Generate and Edit Caption Descriptions"""
-    st.markdown('<div class="step-header">🖼️ Screen Management</div>', unsafe_allow_html=True)
-    st.markdown('<div class="step-description">Generate and manage screens with caption descriptions. Image descriptions will be generated from captions.</div>', unsafe_allow_html=True)
-    
-    # Initialize screens if not exists
-    if "screens" not in st.session_state.scenario_data:
-        st.session_state.scenario_data["screens"] = []
-    
-    screens = st.session_state.scenario_data["screens"]
-    
-    # Generate initial screens if empty
-    if not screens:
-        with st.spinner("Generating initial screens..."):
-            screens = generate_initial_screens(st.session_state.form_data)
-            st.session_state.scenario_data["screens"] = screens
-            st.rerun()
-    
-    # Display screens
-    st.subheader("📋 Generated Screens")
-    
-    for i, screen in enumerate(screens):
-        with st.expander(f"Screen {screen['screen_number']}: {screen['title']}", expanded=True):
-            col1, col2 = st.columns([3, 1])
-            
-            with col1:
-                # Caption description (editable)
-                caption = st.text_area(
-                    f"Caption Description for Screen {screen['screen_number']}",
-                    value=screen.get("caption_description", ""),
-                    height=100,
-                    key=f"caption_{i}"
-                )
-                
-                # Update the screen data
-                screens[i]["caption_description"] = caption
-            
-            with col2:
-                st.markdown("**Status:**")
-                if caption.strip():
-                    st.success("✅ Caption Ready")
-                else:
-                    st.warning("⚠️ Caption Empty")
-                
-                # Add/Remove screen buttons
-                if st.button("🗑️ Remove", key=f"remove_{i}"):
-                    screens.pop(i)
+            if selected_scenario is not None:
+                try:
+                    # Save scenario data
+                    save_scenario_data(st.session_state.scenario_data, scenario_filepath)
+                    st.success("✅ Scenario saved successfully!")
+                    st.session_state.current_step = 5
                     st.rerun()
-    
-    # Add new screen
-    st.subheader("➕ Add New Screen")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        new_screen_title = st.text_input("Screen Title", key="new_screen_title")
-    
-    with col2:
-        new_screen_caption = st.text_area("Caption Description", height=100, key="new_screen_caption")
-    
-    with col3:
-        if st.button("➕ Add Screen", type="primary"):
-            if new_screen_title and new_screen_caption:
-                new_screen = {
-                    "screen_number": len(screens) + 1,
-                    "title": new_screen_title,
-                    "image_description": "",
-                    "caption_description": new_screen_caption
-                }
-                screens.append(new_screen)
-                st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Error saving scenario data: {str(e)}")
             else:
-                st.error("Please fill in both title and caption")
-    
-    # Navigation buttons
-    st.markdown("---")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("← Back to Scenario", type="secondary"):
-            st.session_state.current_step = 7
-            st.rerun()
-    
-    with col2:
-        if st.button("💾 Save Screens", type="primary"):
-            try:
-                scenario_filepath = get_scenario_filepath(st.session_state.form_data)
-                save_scenario_data(st.session_state.scenario_data, scenario_filepath)
-                st.success("✅ Screens saved successfully!")
-            except Exception as e:
-                st.error(f"❌ Error saving screens: {str(e)}")
+                st.error("Please select a scenario before saving.")
     
     with col3:
-        if st.button("➡️ Generate Images", type="primary"):
-            # Check if all screens have captions
-            missing_captions = [s for s in screens if not s.get("caption_description", "").strip()]
-            if missing_captions:
-                st.error(f"❌ Please fill in captions for all screens. Missing: {len(missing_captions)} screens")
-            else:
-                st.session_state.current_step = 9
-                st.rerun()
-
-
-def step_image_generation():
-    """Step 9: Generate Image Descriptions from Captions"""
-    st.markdown('<div class="step-header">🎨 Image Description Generation</div>', unsafe_allow_html=True)
-    st.markdown('<div class="step-description">Generate image descriptions (prompts) from your caption descriptions.</div>', unsafe_allow_html=True)
-    
-    screens = st.session_state.scenario_data.get("screens", [])
-    
-    if not screens:
-        st.error("No screens found. Please go back and create screens first.")
-        if st.button("← Back to Screen Management"):
-            st.session_state.current_step = 8
+        if st.button("🔄 Generate New Options", type="secondary"):
+            # Clear existing scenarios and regenerate
+            if "scenario_data" in st.session_state:
+                st.session_state.scenario_data.pop("generated_scenarios", None)
+                st.session_state.scenario_data.pop("selected_scenario", None)
+                st.session_state.scenario_data.pop("final_scenario", None)
+            st.session_state.scenarios_need_generation = True
             st.rerun()
-        return
-    
-    # Generate image descriptions
-    with st.spinner("Generating image descriptions from captions..."):
-        for i, screen in enumerate(screens):
-            if not screen.get("image_description", "").strip():
-                # Generate image description from caption
-                caption = screen.get("caption_description", "")
-                if caption:
-                    image_desc = generate_image_description_from_caption(
-                        caption, 
-                        st.session_state.form_data.get("style_pack", {})
-                    )
-                    screens[i]["image_description"] = image_desc
-    
-    # Display results
-    st.subheader("🎨 Generated Image Descriptions")
-    
-    for screen in screens:
-        with st.expander(f"Screen {screen['screen_number']}: {screen['title']}", expanded=False):
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**Caption Description:**")
-                st.info(screen.get("caption_description", "No caption"))
-            
-            with col2:
-                st.markdown("**Generated Image Description (Prompt):**")
-                st.success(screen.get("image_description", "No image description"))
-                
-                # Allow manual editing
-                edited_desc = st.text_area(
-                    f"Edit Image Description for Screen {screen['screen_number']}",
-                    value=screen.get("image_description", ""),
-                    height=100,
-                    key=f"edit_image_{screen['screen_number']}"
-                )
-                
-                # Update if changed
-                if edited_desc != screen.get("image_description", ""):
-                    screen["image_description"] = edited_desc
-    
-    # Navigation buttons
-    st.markdown("---")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("← Back to Screens", type="secondary"):
-            st.session_state.current_step = 8
-            st.rerun()
-    
-    with col2:
-        if st.button("💾 Save All", type="primary"):
-            try:
-                scenario_filepath = get_scenario_filepath(st.session_state.form_data)
-                save_scenario_data(st.session_state.scenario_data, scenario_filepath)
-                st.success("✅ All data saved successfully!")
-            except Exception as e:
-                st.error(f"❌ Error saving data: {str(e)}")
-    
-    with col3:
-        if st.button("✅ Complete", type="primary"):
-            st.session_state.current_step = 10
-            st.rerun()
-
-
-def step_final_review():
-    """Step 10: Final Review and Export"""
-    st.markdown('<div class="step-header">📋 Final Review</div>', unsafe_allow_html=True)
-    st.markdown('<div class="step-description">Review your complete scenario with all generated content.</div>', unsafe_allow_html=True)
-    
-    # Display complete scenario
-    st.subheader("📝 Scenario Description")
-    st.markdown(st.session_state.scenario_data.get("scenario_description", "No description"))
-    
-    st.subheader("🎨 Image Vibe")
-    st.markdown(st.session_state.scenario_data.get("image_vibe", "No vibe"))
-    
-    st.subheader("🖼️ Screens Overview")
-    screens = st.session_state.scenario_data.get("screens", [])
-    
-    for screen in screens:
-        with st.expander(f"Screen {screen['screen_number']}: {screen['title']}", expanded=False):
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**Caption:**")
-                st.info(screen.get("caption_description", "No caption"))
-            
-            with col2:
-                st.markdown("**Image Description:**")
-                st.success(screen.get("image_description", "No image description"))
-    
-    # Export options
-    st.subheader("📤 Export Options")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("📄 Export JSON", type="primary"):
-            try:
-                scenario_filepath = get_scenario_filepath(st.session_state.form_data)
-                save_scenario_data(st.session_state.scenario_data, scenario_filepath)
-                st.success(f"✅ Exported to: {scenario_filepath}")
-            except Exception as e:
-                st.error(f"❌ Export error: {str(e)}")
-    
-    with col2:
-        if st.button("📋 Copy to Clipboard", type="secondary"):
-            # Create a formatted text version
-            formatted_text = f"""
-SCENARIO: {st.session_state.form_data['project'].get('project_title', 'Unknown Project')}
-
-DESCRIPTION:
-{st.session_state.scenario_data.get('scenario_description', '')}
-
-IMAGE VIBE:
-{st.session_state.scenario_data.get('image_vibe', '')}
-
-SCREENS:
-"""
-            for screen in screens:
-                formatted_text += f"""
-Screen {screen['screen_number']}: {screen['title']}
-Caption: {screen.get('caption_description', '')}
-Image Description: {screen.get('image_description', '')}
----
-"""
-            
-            st.code(formatted_text)
-            st.info("📋 Content formatted above - copy manually")
-    
-    with col3:
-        if st.button("🔄 Start New Project", type="secondary"):
-            # Reset everything
-            st.session_state.current_step = 0
-            st.session_state.workflow_mode = None
-            st.session_state.form_data = get_default_form_data()
-            st.session_state.scenario_data = {}
-            st.rerun()
-    
-    # Navigation
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("← Back to Images", type="secondary"):
-            st.session_state.current_step = 9
-            st.rerun()
-    
-    with col2:
-        if st.button("📊 View Complete Data", type="primary"):
-            st.json(st.session_state.scenario_data)
