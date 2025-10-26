@@ -185,6 +185,6 @@ def get_scenario_filepath(form_data: Dict[str, Any]) -> str:
     course_path = os.path.join(base_path, course_name)
     module_path = os.path.join(course_path, module_name)
     text_outputs_path = os.path.join(module_path, "text_outputs")
-    filename = "scenario_data.json"
+    filename = "scenario_descriptions.json"
     
     return os.path.join(text_outputs_path, filename)

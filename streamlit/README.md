@@ -4,13 +4,14 @@ A user-friendly Streamlit application that guides educators through a structured
 
 ## Features
 
-- **Step-by-step workflow**: Intuitive 6-step process that gradually collects information
-- **Course Information**: Collect course title and learning objectives
-- **Project Details**: Define module and project information with goals and objectives
-- **Motivation & Problem**: Define problem statements and success criteria
-- **Audience Profile**: Specify student background, education level, and prerequisites
-- **Style Preferences**: Choose visual style, color palette, and aspect ratio
-- **JSON Export**: Download complete configuration for further processing
+- **Streamlined workflow**: Simplified 4-step process for efficient project setup
+- **Single-screen setup**: All essential information in one convenient form
+- **Persistent optional fields**: Add detailed information at any time via sidebar
+- **Course & Project Details**: Define course, module, and project information
+- **Audience Profile**: Specify student background and description
+- **Flexible configuration**: Required fields upfront, optional fields when needed
+- **JSON Export**: Save complete configuration for further processing
+- **Scenario Generation**: AI-powered scenario creation workflow
 
 ## Installation
 
@@ -26,12 +27,26 @@ streamlit run streamlit/app.py
 
 ## Usage
 
-1. **Course Information**: Enter your course title and learning objectives
-2. **Project Information**: Define the module and project details
-3. **Motivation**: Describe the problem and success criteria
-4. **Audience**: Specify student background and prerequisites
-5. **Style**: Choose visual preferences for slides
-6. **Review & Export**: Review all information and download JSON configuration
+### Main Workflow
+1. **Initial Selection**: Choose to create a new project or use existing content
+2. **Project Setup**: Enter 5 essential fields:
+   - Course Title
+   - Module Title
+   - Project Title
+   - Project Goal
+   - Brief Student Description
+3. **Review & Save**: Review your information and save configuration
+4. **Next Phase**: Proceed to scenario generation
+5. **Scenario Generation**: Generate AI-powered scenarios for your project
+
+### Optional Details (Available Anytime)
+Access the sidebar panel at any step to add:
+- Course Learning Objectives
+- Module Description
+- Project Learning Objectives
+- Education Level
+- Prerequisites
+- Class Size
 
 ## Output Format
 

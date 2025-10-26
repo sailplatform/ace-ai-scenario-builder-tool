@@ -27,11 +27,33 @@ def generate_scenario_summaries_with_gpt(form_data, existing_scenario_data):
         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         
         # Extract key information from form data
+        # Extract all fields present in example context.json and include if they exist
+        # Course information
         course_title = form_data.get("course", {}).get("course_title", "")
+        course_objectives = form_data.get("course", {}).get("course_objectives", "")
+
+        # Project/module information
+        module_title = form_data.get("project", {}).get("module_title", "")
+        module_description = form_data.get("project", {}).get("module_description", "")
         project_title = form_data.get("project", {}).get("project_title", "")
         project_goal = form_data.get("project", {}).get("project_goal", "")
+        project_learning_objectives = form_data.get("project", {}).get("project_learning_objectives", "")
+
+        # Audience information
         student_description = form_data.get("audience", {}).get("student_description", "")
         education_level = form_data.get("audience", {}).get("education_level", "")
+        prerequisites = form_data.get("audience", {}).get("prerequisites", "")
+        class_size = form_data.get("audience", {}).get("class_size", "")
+        audience_additional_info = form_data.get("audience", {}).get("additional_info", "")
+
+        # Style pack information
+        palette = form_data.get("style_pack", {}).get("palette", "")
+        vibe = form_data.get("style_pack", {}).get("vibe", "")
+        aspect_ratio = form_data.get("style_pack", {}).get("aspect_ratio", "")
+
+        # General additional_info (not audience)
+        additional_info = form_data.get("additional_info", "")
+
         
         # Extract existing scenario context if available
         existing_description = existing_scenario_data.get("scenario_description", "") if existing_scenario_data else ""
@@ -41,10 +63,25 @@ def generate_scenario_summaries_with_gpt(form_data, existing_scenario_data):
 You are an expert educational scenario designer. Based on the following course and project information, generate exactly 3 short, engaging scenario summaries that would motivate students to complete this project.
 
 Course: {course_title}
-Project: {project_title}
+Course Objectives: {course_objectives}
+
+Module Title: {module_title}
+Module Description: {module_description}
+
+Project Title: {project_title}
 Project Goal: {project_goal}
+Project Learning Objectives: {project_learning_objectives}
+
 Student Profile: {student_description}
 Education Level: {education_level}
+Prerequisites: {prerequisites}
+Class Size: {class_size}
+
+Palette: {palette}
+Vibe: {vibe}
+Aspect Ratio: {aspect_ratio}
+
+Additional Information: {additional_info}
 
 Existing Scenario Context: {existing_description}
 
@@ -56,20 +93,16 @@ Generate 3 distinct scenario summaries (2-3 sentences long) that:
 5. Are appropriate for the education level
 6. Include DIVERSE characters (represent different ethnicities, genders, ages, backgrounds)
 7. Specify the backdrop/setting where the scenario takes place
-8. Focus on LEARNING GOALS and real-world applications
-9. Show how the scenario connects to practical, industry-relevant skills
 
 IMPORTANT: Each scenario must:
 - Include diverse characters (avoid only white/male characters)
 - Specify the setting/backdrop (e.g., "in a tech startup", "at a community center", "in a research lab")
-- Clearly connect to the learning objectives and real-world applications
-- Explain how the scenario motivates learning and provides context for where skills are used
-- Keep character details brief - focus on the learning connection, not detailed expressions
+- Keep character details brief - focus on the setting context, not detailed expressions
 
 Format your response as:
-SCENARIO 1: [summary with diverse characters, setting, and learning connection]
-SCENARIO 2: [summary with diverse characters, setting, and learning connection] 
-SCENARIO 3: [summary with diverse characters, setting, and learning connection]
+SCENARIO 1: [summary with diverse characters and setting]
+SCENARIO 2: [summary with diverse characters and setting] 
+SCENARIO 3: [summary with diverse characters and setting]
 """
         
         # Call GPT-4.1
@@ -80,7 +113,7 @@ SCENARIO 3: [summary with diverse characters, setting, and learning connection]
 
 CONTEXT EXAMPLE: safeChats is a fast-growing social media platform with active users worldwide. Their Trust and Safety team needs help strengthening content moderation systems and reducing costs. Currently, they use traditional sentiment analysis that flags posts as hate speech or not, but provides no explanations. Users complain about unfair flagging, and human reviewers spend extra time interpreting decisions. Their system also performs poorly in other languages. They're exploring Generative AI and LLMs because these can understand context, sarcasm, and nuance in multiple languages, explain reasoning in natural language, suggest better moderation responses, and continuously improve through feedback loops.
 
-Your scenarios should focus on real-world applications and learning connections, not detailed character descriptions."""},
+Your scenarios should focus on the overall setting context, like the example above, not detailed character descriptions."""},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=800,
@@ -127,6 +160,9 @@ def step_initial_selection():
     st.markdown('<div class="step-header">🚀 Welcome to AI Scenario Builder</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Choose how you\'d like to start your project.</div>', unsafe_allow_html=True)
     
+    # Reset form data when returning to initial selection
+    if st.session_state.workflow_mode is None or st.session_state.current_step == 0:
+        st.session_state.form_data = get_default_form_data()
     
     # Check for existing courses
     existing_courses = get_existing_courses()
@@ -139,6 +175,7 @@ def step_initial_selection():
         
         if st.button("Create New Project", type="primary", use_container_width=True):
             st.session_state.workflow_mode = "new"
+            st.session_state.form_data = get_default_form_data()
             st.session_state.current_step = 1
             st.rerun()
     
@@ -149,6 +186,7 @@ def step_initial_selection():
             
             if st.button("Use Existing Content", type="secondary", use_container_width=True):
                 st.session_state.workflow_mode = "existing"
+                st.session_state.form_data = get_default_form_data()
                 st.session_state.current_step = 0.5  # Special step for existing content selection
                 st.rerun()
         else:
@@ -175,88 +213,102 @@ def step_initial_selection():
 def step_existing_content_selection():
     """Step 0.5: Select existing course and module"""
     st.markdown('<div class="step-header">📚 Select Existing Content</div>', unsafe_allow_html=True)
-    st.markdown('<div class="step-description">Choose an existing course and module to build upon.</div>', unsafe_allow_html=True)
-    
+    st.markdown('<div class="step-description">Choose an existing course and module to build upon. After loading, you\'ll proceed directly to scenario generation.</div>', unsafe_allow_html=True)
+
     existing_courses = get_existing_courses()
-    
     if not existing_courses:
         st.error("No existing courses found. Please create a new project.")
         if st.button("← Back to Selection"):
+            st.session_state.workflow_mode = None
+            st.session_state.form_data = get_default_form_data()
             st.session_state.current_step = 0
             st.rerun()
         return
-    
-    with st.form("existing_content_form"):
-        st.subheader("Course Selection")
-        
-        selected_course = st.selectbox(
-            "Select Course",
-            options=existing_courses,
-            help="Choose an existing course to build upon"
+
+    # Initialize single sources of truth
+    if "selected_course" not in st.session_state or st.session_state.selected_course not in existing_courses:
+        st.session_state.selected_course = existing_courses[0]
+    if "selected_module" not in st.session_state:
+        st.session_state.selected_module = None
+
+    def _on_course_change():
+        # Clear module whenever course changes
+        st.session_state.selected_module = None
+
+    st.subheader("Course Selection")
+    # Single key, no manual assignment after rendering
+    st.selectbox(
+        "Select Course",
+        options=existing_courses,
+        index=existing_courses.index(st.session_state.selected_course) if st.session_state.selected_course in existing_courses else 0,
+        key="selected_course",
+        on_change=_on_course_change,
+        help="Choose an existing course to build upon"
+    )
+
+    # Modules depend on the current course
+    modules_for_course = get_existing_modules(st.session_state.selected_course)
+
+    st.subheader("Module Selection")
+    if modules_for_course:
+        # Ensure module value is valid for this course
+        if st.session_state.selected_module not in modules_for_course:
+            st.session_state.selected_module = modules_for_course[0]
+
+        st.selectbox(
+            "Select Module",
+            options=modules_for_course,
+            index=modules_for_course.index(st.session_state.selected_module) if st.session_state.selected_module in modules_for_course else 0,
+            key="selected_module",
+            help="Choose an existing module"
         )
-        
-        st.subheader("Module Selection")
-        
-        existing_modules = get_existing_modules(selected_course)
-        
-        if existing_modules:
-            selected_module = st.selectbox(
-                "Select Module",
-                options=existing_modules,
-                help="Choose an existing module"
+    else:
+        st.warning("No modules found for the selected course.")
+        st.session_state.selected_module = None
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("← Back to Selection", type="secondary"):
+            st.session_state.workflow_mode = None
+            st.session_state.form_data = get_default_form_data()
+            st.session_state.current_step = 0
+            st.rerun()
+
+    with col2:
+        if st.button("Continue →", type="primary"):
+            if not st.session_state.selected_module:
+                st.error("Please select a module to continue.")
+                return
+
+            course_name_clean = st.session_state.selected_course.lower().replace(' ', '_')
+            module_name_clean = st.session_state.selected_module.lower().replace(' ', '_')
+            config_path = os.path.join(
+                "data", course_name_clean, module_name_clean, "text_outputs", "context.json"
             )
-        else:
-            st.error("No existing modules found for this course. Please create a new project instead.")
-            selected_module = None
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            submitted = st.form_submit_button("← Back to Selection", type="secondary")
-            if submitted:
-                st.session_state.current_step = 0
-                st.rerun()
-        
-        with col2:
-            submitted = st.form_submit_button("Continue →", type="primary")
-            if submitted:
-                if not selected_module:
-                    st.error("Please select a module to continue.")
-                    return
-                
-                # Store the selected course and module
-                st.session_state.selected_course = selected_course
-                st.session_state.selected_module = selected_module
-                
-                # Try to load existing configuration
-                course_name_clean = selected_course.lower().replace(' ', '_')
-                module_name_clean = selected_module.lower().replace(' ', '_')
-                config_path = os.path.join("data", course_name_clean, module_name_clean, "text_outputs", "module_generation_information.json")
-                
-                if os.path.exists(config_path):
-                    try:
-                        with open(config_path, 'r') as f:
-                            existing_data = json.load(f)
-                        st.session_state.form_data = existing_data
-                        st.session_state.workflow_mode = "existing_module"
-                        
-                        # Skip directly to step 5 (Next Phase) since both course and module exist
-                        st.session_state.current_step = 5
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"❌ Could not load existing configuration: {str(e)}")
-                else:
-                    st.error("❌ No existing configuration found for this module. Please create a new project instead.")
 
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, 'r') as f:
+                        existing_data = json.load(f)
+                    st.session_state.form_data = existing_data
+                    st.session_state.workflow_mode = "existing_module"
+                    st.info("✅ Configuration loaded! Proceeding to scenario generation...")
+                    st.session_state.current_step = 3
+                    st.session_state.scenarios_need_generation = True
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Could not load existing configuration: {str(e)}")
+            else:
+                st.error("❌ No existing configuration found for this module. Please create a new project instead.")
 
-def step_course_info():
-    """Step 1: Course Information"""
-    st.markdown('<div class="step-header">📚 Course Information</div>', unsafe_allow_html=True)
+def step_project_setup():
+    """Step 1: Combined Project Setup - All required information in one place"""
+    st.markdown('<div class="step-header">🚀 Project Setup</div>', unsafe_allow_html=True)
     
-    st.markdown('<div class="step-description">Let\'s start with the basic course details that will provide context for your project.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-description">Let\'s set up your project with the essential information.</div>', unsafe_allow_html=True)
     
-    with st.form("course_info_form"):
-        st.subheader("Course Details")
+    with st.form("project_setup_form"):
+        st.subheader("Course & Module")
         
         course_title = st.text_input(
             "Course Title *",
@@ -264,47 +316,10 @@ def step_course_info():
             help="Enter the name of your course"
         )
         
-        course_objectives = st.text_area(
-            "Course Learning Objectives (Optional)",
-            value=st.session_state.form_data["course"].get("course_objectives", ""),
-            help="List main learning objectives (one per line or comma separated)",
-            height=100
-        )
-        
-        submitted = st.form_submit_button("Continue to Project Information", type="primary")
-        
-        if submitted:
-            if course_title:
-                st.session_state.form_data["course"] = {
-                    "course_title": course_title,
-                    "course_objectives": course_objectives
-                }
-                st.session_state.current_step = 2
-                st.rerun()
-            else:
-                st.error("Please enter a course title")
-
-
-def step_project_info():
-    """Step 2: Project Information"""
-    st.markdown('<div class="step-header">🎯 Project Information</div>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="step-description">Now let\'s define the specific project and module details.</div>', unsafe_allow_html=True)
-    
-    with st.form("project_info_form"):
-        st.subheader("Module Details")
-        
         module_title = st.text_input(
             "Module Title *",
             value=st.session_state.form_data["project"].get("module_title", ""),
             help="Name of the module this project belongs to"
-        )
-        
-        module_description = st.text_area(
-            "Module Description (Optional)",
-            value=st.session_state.form_data["project"].get("module_description", ""),
-            help="Brief description of what this module covers",
-            height=80
         )
         
         st.subheader("Project Details")
@@ -319,224 +334,79 @@ def step_project_info():
             "Project Goal *",
             value=st.session_state.form_data["project"].get("project_goal", ""),
             help="What should students achieve by completing this project?",
-            height=80
-        )
-        
-        project_learning_objectives = st.text_area(
-            "Project Learning Objectives (Optional)",
-            value=st.session_state.form_data["project"].get("project_learning_objectives", ""),
-            help="Specific learning objectives for this project (one per line or separated by commas)",
             height=100
         )
         
-        col1, col2 = st.columns(2)
-        with col1:
-            submitted = st.form_submit_button("← Back to Course Info", type="secondary")
-            if submitted:
-                st.session_state.current_step = 1
-                st.rerun()
-        
-        with col2:
-            submitted = st.form_submit_button("Continue to Audience →", type="primary")
-            if submitted:
-                if all([module_title, project_title, project_goal]):
-                    st.session_state.form_data["project"] = {
-                        "module_title": module_title,
-                        "module_description": module_description,
-                        "project_title": project_title,
-                        "project_goal": project_goal,
-                        "project_learning_objectives": project_learning_objectives
-                    }
-                    st.session_state.current_step = 3
-                    st.rerun()
-                else:
-                    st.error("Please fill in module title, project title, and project goal")
-
-
-def step_audience_info():
-    """Step 3: Audience Information"""
-    st.markdown('<div class="step-header">👥 Audience Information</div>', unsafe_allow_html=True)
-    st.markdown('<div class="step-description">Tell us about your students and their background.</div>', unsafe_allow_html=True)
-    
-    with st.form("audience_info_form"):
         st.subheader("Student Profile")
         
         student_description = st.text_area(
-            "Student Description *",
+            "Brief Student Description *",
             value=st.session_state.form_data["audience"].get("student_description", ""),
-            help="Describe who your students are (background, experience level, etc.)",
+            help="Briefly describe who your students are (background, experience level, etc.)",
             placeholder="e.g., Army veterans with limited computer science experience",
-            height=80
-        )
-        
-        education_levels = [
-            "middle_school", "high_school", "undergrad_intro", "undergrad_advanced", 
-            "grad_course", "bootcamp", "professional", "other"
-        ]
-        
-        education_level = st.selectbox(
-            "Education Level *",
-            options=education_levels,
-            index=education_levels.index(st.session_state.form_data["audience"].get("education_level", "undergrad_intro")),
-            help="Select the most appropriate education level"
-        )
-        
-        st.subheader("Prerequisites (Optional)")
-        st.markdown("What should students know before starting this project?")
-        
-        # Single text area for all prerequisites
-        prerequisites_text = st.text_area(
-            "Prerequisites",
-            value=st.session_state.form_data["audience"].get("prerequisites", ""),
-            help="List all prerequisites (one per line or separated by commas)",
             height=100
         )
         
-        st.subheader("Class Information")
+        st.markdown("---")
+        st.markdown("💡 **Tip:** You can add optional details like course objectives, learning objectives, education level, prerequisites, and class size at any time, using the sidebar.")
         
-        class_size = st.number_input(
-            "Class Size (Optional)",
-            min_value=1,
-            max_value=1000,
-            value=st.session_state.form_data["audience"].get("class_size", 25),
-            help="Expected number of students"
-        )
+        submitted = st.form_submit_button("Continue to Review →", type="primary")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            submitted = st.form_submit_button("← Back to Project Info", type="secondary")
-            if submitted:
+        if submitted:
+            if all([course_title, module_title, project_title, project_goal, student_description]):
+                # Save all data with defaults for optional fields
+                st.session_state.form_data["course"] = {
+                    "course_title": course_title,
+                    "course_objectives": st.session_state.form_data["course"].get("course_objectives", "")
+                }
+                st.session_state.form_data["project"] = {
+                    "module_title": module_title,
+                    "module_description": st.session_state.form_data["project"].get("module_description", ""),
+                    "project_title": project_title,
+                    "project_goal": project_goal,
+                    "project_learning_objectives": st.session_state.form_data["project"].get("project_learning_objectives", "")
+                }
+                st.session_state.form_data["audience"] = {
+                    "student_description": student_description,
+                    "education_level": st.session_state.form_data["audience"].get("education_level", "undergrad_intro"),
+                    "prerequisites": st.session_state.form_data["audience"].get("prerequisites", ""),
+                    "class_size": st.session_state.form_data["audience"].get("class_size", 25)
+                }
                 st.session_state.current_step = 2
                 st.rerun()
-        
-        with col2:
-            submitted = st.form_submit_button("Continue to Review →", type="primary")
-            if submitted:
-                if student_description and education_level:
-                    st.session_state.form_data["audience"] = {
-                        "student_description": student_description,
-                        "education_level": education_level,
-                        "prerequisites": prerequisites_text,
-                        "class_size": class_size if class_size > 0 else None
-                    }
-                    st.session_state.current_step = 4
-                    st.rerun()
-                else:
-                    st.error("Please fill in the student description and education level")
-
-
-# def step_style_pack():
-#     """Step 4: Style Preferences"""
-#     st.markdown('<div class="step-header">🎨 Style Preferences</div>', unsafe_allow_html=True)
-#     st.markdown('<div class="step-description">Define the visual style and additional information for your motivation slides.</div>', unsafe_allow_html=True)
-    
-#     with st.form("style_pack_form"):
-#         st.subheader("Visual Style")
-        
-#         # Style reference guide
-#         with st.expander("📚 Style Reference Guide", expanded=False):
-#             st.markdown("""
-#             **Common Color Palettes:**
-#             - `cool contrast` - blue and teal, navy and cyan
-#             - `warm contrast` - red and orange, coral and gold
-#             - `vibrant duo` - purple and yellow, magenta and lime
-#             - `earth duo` - brown and olive, tan and forest
-
-#             **Visual Style Examples:**
-#             - `comic panel style` - bold outlines, limited shading, expressive poses
-#             - `flat illustration design` - simple shapes, clean fills, minimal detail
-#             - `semi realistic rendering` - stylized proportions, moderate detail
-#             - `photo realistic imagery` - lifelike textures, accurate lighting
-#             - `minimalist visual language` - ample whitespace, few elements
-#             - `hand drawn sketch style` - pencil or ink lines, textured strokes
-#             - `three dimensional render` - modeled forms, perspective and lighting
-
-#             **Aspect Ratios:**
-#             - `4:3` - traditional presentation format
-#             - `16:9` - widescreen format
-#             - `1:1` - square format
-#             - `3:2` - photo format
-#             """)
-        
-#         col1, col2 = st.columns(2)
-        
-#         with col1:
-#             palette = st.text_input(
-#                 "Color Palette",
-#                 value=st.session_state.form_data["style_pack"].get("palette", "blue"),
-#                 help="Enter your preferred color palette (see reference guide above)"
-#             )
-            
-#             vibe = st.text_input(
-#                 "Visual Style",
-#                 value=st.session_state.form_data["style_pack"].get("vibe", "flat_illustration"),
-#                 help="Enter your preferred visual style (see reference guide above)"
-#             )
-        
-#         with col2:
-#             aspect_ratio = st.text_input(
-#                 "Aspect Ratio",
-#                 value=st.session_state.form_data["style_pack"].get("aspect_ratio", "4:3"),
-#                 help="Enter your preferred aspect ratio (see reference guide above)"
-#             )
-        
-#         st.subheader("Additional Information")
-        
-#         additional_info = st.text_area(
-#             "Additional Details",
-#             value=st.session_state.form_data.get("additional_info", ""),
-#             help="Specify any additional information such as characters, specific themes, cultural considerations, etc.",
-#             height=120
-#         )
-        
-#         col1, col2 = st.columns(2)
-#         with col1:
-#             submitted = st.form_submit_button("← Back to Audience", type="secondary")
-#             if submitted:
-#                 st.session_state.current_step = 3
-#                 st.rerun()
-        
-#         with col2:
-#             submitted = st.form_submit_button("Review & Continue →", type="primary")
-#             if submitted:
-#                 st.session_state.form_data["style_pack"] = {
-#                     "palette": palette,
-#                     "vibe": vibe,
-#                     "aspect_ratio": aspect_ratio
-#                 }
-#                 st.session_state.form_data["additional_info"] = additional_info
-#                 st.session_state.current_step = 5
-#                 st.rerun()
-
+            else:
+                st.error("Please fill in all required fields (marked with *)")
 
 def step_review_export():
-    """Step 4: Review and Save Configuration"""
+    """Step 2: Review and Save Configuration"""
     st.markdown('<div class="step-header">📋 Review & Save Configuration</div>', unsafe_allow_html=True)
-    st.markdown('<div class="step-description">Review your information and save the configuration to continue with the workflow.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-description">Review your information and save the configuration. Next, you\'ll generate AI-powered scenario descriptions for your project.</div>', unsafe_allow_html=True)
     
     # Display all collected information
     st.subheader("📚 Course Information")
     course_data = st.session_state.form_data["course"]
     st.markdown(f"**Course Title:** {course_data.get('course_title', 'Not provided')}")
-    st.markdown(f"**Course Objectives:** {course_data.get('course_objectives', 'Not provided')}")
+    if course_data.get('course_objectives'):
+        st.markdown(f"**Course Objectives:** {course_data.get('course_objectives', 'Not provided')}")
     
     st.subheader("🎯 Project Information")
     project_data = st.session_state.form_data["project"]
     st.markdown(f"**Module Title:** {project_data.get('module_title', 'Not provided')}")
-    st.markdown(f"**Module Description:** {project_data.get('module_description', 'Not provided')}")
+    if project_data.get('module_description'):
+        st.markdown(f"**Module Description:** {project_data.get('module_description', 'Not provided')}")
     st.markdown(f"**Project Title:** {project_data.get('project_title', 'Not provided')}")
     st.markdown(f"**Project Goal:** {project_data.get('project_goal', 'Not provided')}")
-    st.markdown(f"**Project Learning Objectives:** {project_data.get('project_learning_objectives', 'Not provided')}")
+    if project_data.get('project_learning_objectives'):
+        st.markdown(f"**Project Learning Objectives:** {project_data.get('project_learning_objectives', 'Not provided')}")
     
     st.subheader("👥 Audience")
     audience_data = st.session_state.form_data["audience"]
     st.markdown(f"**Student Description:** {audience_data.get('student_description', 'Not provided')}")
     st.markdown(f"**Education Level:** {audience_data.get('education_level', 'Not provided')}")
-    st.markdown(f"**Prerequisites:** {audience_data.get('prerequisites', 'Not provided')}")
+    if audience_data.get('prerequisites'):
+        st.markdown(f"**Prerequisites:** {audience_data.get('prerequisites', 'Not provided')}")
     if audience_data.get('class_size'):
         st.markdown(f"**Class Size:** {audience_data.get('class_size')}")
-    
-    # Style preferences removed for now per updated workflow
     
     # Save and continue options
     st.subheader("💾 Save Configuration")
@@ -544,19 +414,20 @@ def step_review_export():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("← Back to Audience", type="secondary"):
-            st.session_state.current_step = 3
+        if st.button("← Back to Project Setup", type="secondary"):
+            st.session_state.current_step = 1
             st.rerun()
     
     with col2:
-        if st.button("💾 Save & Continue", type="primary"):
+        if st.button("💾 Save & Generate Scenarios", type="primary"):
             try:
                 filepath = save_to_json()
                 st.success(f"✅ Configuration saved successfully!")
                 st.info(f"📁 Saved to: `{filepath}`")
                 
-                # Move to next step in workflow
-                st.session_state.current_step = 5
+                # Move directly to scenario generation
+                st.session_state.current_step = 3
+                st.session_state.scenarios_need_generation = True
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Error saving configuration: {str(e)}")
@@ -569,84 +440,11 @@ def step_review_export():
             st.rerun()
     
     # Display JSON preview
-    st.subheader("📄 Configuration Preview")
-    st.json(st.session_state.form_data)
-
-
-def step_next_phase():
-    """Step 5: Next Phase - Scenario Generation"""
-    st.markdown('<div class="step-header">🚀 Next Phase: Scenario Generation</div>', unsafe_allow_html=True)
-    
-    # Check if this is from existing module or newly saved
-    if st.session_state.workflow_mode == "existing_module":
-        st.markdown('<div class="step-description">Welcome back! You\'re continuing with an existing module. The next steps will involve generating scenario descriptions, image descriptions, and captions.</div>', unsafe_allow_html=True)
-        
-        # Show current course and module info
-        course_title = st.session_state.selected_course
-        module_title = st.session_state.selected_module
-        
-        st.info(f"📚 **Course:** {course_title}")
-        st.info(f"🎯 **Module:** {module_title}")
-        
-        # Get the file path
-        course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
-        module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
-        filepath = f"data/{course_name}/{module_name}/text_outputs/module_generation_information.json"
-        
-        st.info(f"📁 Configuration loaded from: `{filepath}`")
-    else:
-        st.markdown('<div class="step-description">Your configuration has been saved! The next steps will involve generating scenario descriptions, image descriptions, and captions.</div>', unsafe_allow_html=True)
-        
-        st.success("✅ Configuration saved successfully!")
-        
-        # Get the saved file path
-        course_title = st.session_state.form_data["course"].get("course_title", "unknown_course")
-        module_title = st.session_state.form_data["project"].get("module_title", "unknown_module")
-        course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
-        module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
-        filepath = f"data/{course_name}/{module_name}/text_outputs/module_generation_information.json"
-        
-        st.info(f"📁 Configuration saved to: `{filepath}`")
-    
-    st.subheader("🎯 Next Steps in the Workflow")
-    
-    st.markdown("""
-    The following steps will be performed automatically:
-    
-    1. **📝 Scenario Descriptions** - Generate detailed scenario descriptions based on your project goals
-    2. **🖼️ Image Descriptions** - Create specific image descriptions for each scenario panel
-    3. **💬 Caption Descriptions** - Generate caption text for each image
-    4. **🎨 Image Generation** - Create the actual images using AI
-    5. **📊 Final Assembly** - Compile everything into your motivation slides
-    
-    """)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("🔄 Start New Project", type="secondary"):
-            st.session_state.current_step = 0
-            st.session_state.workflow_mode = None
-            st.session_state.form_data = get_default_form_data()
-            st.rerun()
-    
-    with col2:
-        if st.button("📋 View Configuration", type="primary"):
-            st.session_state.current_step = 4
-            st.rerun()
-    
-    # Add new button to start scenario generation
-    st.markdown("---")
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("🚀 Start Scenario Generation", type="primary", use_container_width=True):
-            st.session_state.current_step = 6
-            st.session_state.scenarios_need_generation = True
-            st.rerun()
-
+    # st.subheader("📄 Configuration Preview")
+    # st.json(st.session_state.form_data)
 
 def step_scenario_generation():
-    """Step 6: Generate Scenario Description and Image Vibe"""
+    """Step 3: Generate Scenario Description and Image Vibe"""
     st.markdown('<div class="step-header">📝 Scenario Generation</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Generate three scenario options using AI and select the best one for your project.</div>', unsafe_allow_html=True)
     
@@ -723,6 +521,38 @@ def step_scenario_generation():
             st.session_state.scenario_data["generated_scenarios"][selected_scenario] = edited_scenario
             st.session_state.scenario_data["final_scenario"] = edited_scenario
         
+        # LLM-based editing
+        st.markdown("**🤖 Or use AI to refine your scenario:**")
+        update_instructions = st.text_area(
+            "Describe how you'd like to modify the scenario:",
+            placeholder="e.g., Make it more technical, add more diversity, focus on practical applications",
+            height=80,
+            key="llm_update_instructions"
+        )
+        
+        if st.button("✨ Update with AI", type="secondary"):
+            if update_instructions:
+                with st.spinner("🤖 Updating scenario with AI..."):
+                    try:
+                        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                        response = client.chat.completions.create(
+                            model="gpt-4-1106-preview",
+                            messages=[
+                                {"role": "system", "content": "You are an expert educational scenario designer. Update the given scenario based on the user's instructions while maintaining its core educational value."},
+                                {"role": "user", "content": f"Current scenario: {edited_scenario}\n\nUpdate instructions: {update_instructions}\n\nProvide only the updated scenario text, no explanations."}
+                            ],
+                            max_tokens=500,
+                            temperature=0.7
+                        )
+                        updated_scenario = response.choices[0].message.content.strip()
+                        st.session_state.scenario_data["generated_scenarios"][selected_scenario] = updated_scenario
+                        st.success("✅ Scenario updated with AI!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error updating scenario: {str(e)}")
+            else:
+                st.error("Please provide update instructions.")
+        
         # Display final scenario
         st.subheader("📝 Final Scenario")
         st.success(edited_scenario)
@@ -732,8 +562,8 @@ def step_scenario_generation():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("← Back to Next Phase", type="secondary"):
-            st.session_state.current_step = 5
+        if st.button("← Back to Review", type="secondary"):
+            st.session_state.current_step = 2
             st.rerun()
     
     with col2:
@@ -741,9 +571,22 @@ def step_scenario_generation():
             if selected_scenario is not None:
                 try:
                     # Save scenario data
+                    st.session_state.scenario_data["final_scenario"] = edited_scenario
                     save_scenario_data(st.session_state.scenario_data, scenario_filepath)
+                    
+                    # Also save to scenario_descriptions.json
+                    course_title = st.session_state.form_data["course"].get("course_title", "")
+                    module_title = st.session_state.form_data["project"].get("module_title", "")
+                    course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                    module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                    desc_filepath = f"data/{course_name}/{module_name}/text_outputs/scenario_descriptions.json"
+                    os.makedirs(os.path.dirname(desc_filepath), exist_ok=True)
+                    with open(desc_filepath, 'w') as f:
+                        json.dump({"scenario_description": edited_scenario}, f, indent=2)
+                    
                     st.success("✅ Scenario saved successfully!")
-                    st.session_state.current_step = 5
+                    st.session_state.current_step = 4
+                    st.session_state.metadata_need_generation = True
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Error saving scenario data: {str(e)}")
@@ -758,4 +601,175 @@ def step_scenario_generation():
                 st.session_state.scenario_data.pop("selected_scenario", None)
                 st.session_state.scenario_data.pop("final_scenario", None)
             st.session_state.scenarios_need_generation = True
+            st.rerun()
+
+
+def step_scenario_metadata():
+    """Step 4: Generate Scenario Metadata and Actors"""
+    st.markdown('<div class="step-header">🎬 Scenario Metadata & Actors</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-description">Generate metadata and actors for your scenario using AI.</div>', unsafe_allow_html=True)
+    
+    # Initialize metadata generation flag
+    if "metadata_need_generation" not in st.session_state:
+        st.session_state.metadata_need_generation = True
+    
+    # Initialize metadata data if not exists
+    if "metadata_data" not in st.session_state or not st.session_state.metadata_data:
+        st.session_state.metadata_data = {}
+    
+    # Get final scenario
+    final_scenario = st.session_state.scenario_data.get("final_scenario", "")
+    
+    # Generate metadata when flag is True
+    if st.session_state.metadata_need_generation:
+        with st.spinner("🤖 Generating scenario metadata with AI..."):
+            try:
+                client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                
+                prompt = f"""Based on this scenario, generate metadata and actors:
+
+Scenario: {final_scenario}
+
+Course: {st.session_state.form_data["course"].get("course_title", "")}
+Project: {st.session_state.form_data["project"].get("project_title", "")}
+
+Generate:
+1. Number of screens (typically 3-7)
+2. Style pack (palette, vibe, aspect ratio)
+3. Overall tone (e.g., professional, casual, technical)
+4. List of 2-4 actors with: name, role, background, communication style
+
+Format as JSON:
+{{
+  "num_screens": <number>,
+  "style_pack": {{"palette": "", "vibe": "", "aspect_ratio": ""}},
+  "overall_tone": "",
+  "actors": [
+    {{"name": "", "role": "", "background": "", "communication_style": ""}}
+  ]
+}}"""
+                
+                response = client.chat.completions.create(
+                    model="gpt-4-1106-preview",
+                    messages=[
+                        {"role": "system", "content": "You are an expert educational content designer. Generate scenario metadata in valid JSON format."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=800,
+                    temperature=0.7
+                )
+                
+                import re
+                content = response.choices[0].message.content
+                json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                if json_match:
+                    metadata = json.loads(json_match.group())
+                    st.session_state.metadata_data = metadata
+                    st.session_state.metadata_need_generation = False
+                else:
+                    st.error("Failed to parse metadata")
+            except Exception as e:
+                st.error(f"❌ Error generating metadata: {str(e)}")
+                return
+    
+    # Display and edit metadata
+    st.subheader("📊 Scenario Metadata")
+    
+    num_screens = st.number_input(
+        "Number of Screens",
+        min_value=1,
+        max_value=20,
+        value=st.session_state.metadata_data.get("num_screens", 5),
+        key="edit_num_screens"
+    )
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        palette = st.text_input(
+            "Color Palette",
+            value=st.session_state.metadata_data.get("style_pack", {}).get("palette", ""),
+            key="edit_palette"
+        )
+    with col2:
+        vibe = st.text_input(
+            "Visual Vibe",
+            value=st.session_state.metadata_data.get("style_pack", {}).get("vibe", ""),
+            key="edit_vibe"
+        )
+    with col3:
+        aspect_ratio = st.text_input(
+            "Aspect Ratio",
+            value=st.session_state.metadata_data.get("style_pack", {}).get("aspect_ratio", "16:9"),
+            key="edit_aspect_ratio"
+        )
+    
+    overall_tone = st.text_input(
+        "Overall Tone",
+        value=st.session_state.metadata_data.get("overall_tone", ""),
+        key="edit_tone"
+    )
+    
+    # Display and edit actors
+    st.subheader("🎭 Actors")
+    
+    actors = st.session_state.metadata_data.get("actors", [])
+    if not actors:
+        actors = [{"name": "", "role": "", "background": "", "communication_style": ""}]
+    
+    edited_actors = []
+    for i, actor in enumerate(actors):
+        with st.expander(f"Actor {i+1}: {actor.get('name', 'New Actor')}", expanded=True):
+            name = st.text_input(f"Name", value=actor.get("name", ""), key=f"actor_{i}_name")
+            role = st.text_input(f"Role", value=actor.get("role", ""), key=f"actor_{i}_role")
+            background = st.text_area(f"Background", value=actor.get("background", ""), key=f"actor_{i}_background", height=80)
+            comm_style = st.text_input(f"Communication Style", value=actor.get("communication_style", ""), key=f"actor_{i}_comm")
+            edited_actors.append({
+                "name": name,
+                "role": role,
+                "background": background,
+                "communication_style": comm_style
+            })
+    
+    if st.button("➕ Add Actor"):
+        actors.append({"name": "", "role": "", "background": "", "communication_style": ""})
+        st.session_state.metadata_data["actors"] = actors
+        st.rerun()
+    
+    # Navigation
+    st.markdown("---")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("← Back to Scenario", type="secondary"):
+            st.session_state.current_step = 3
+            st.rerun()
+    
+    with col2:
+        if st.button("💾 Save Metadata", type="primary"):
+            try:
+                # Update metadata
+                st.session_state.metadata_data.update({
+                    "num_screens": num_screens,
+                    "style_pack": {"palette": palette, "vibe": vibe, "aspect_ratio": aspect_ratio},
+                    "overall_tone": overall_tone,
+                    "actors": edited_actors
+                })
+                
+                # Save to file
+                course_title = st.session_state.form_data["course"].get("course_title", "")
+                module_title = st.session_state.form_data["project"].get("module_title", "")
+                course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                metadata_filepath = f"data/{course_name}/{module_name}/text_outputs/scenario_metadata.json"
+                os.makedirs(os.path.dirname(metadata_filepath), exist_ok=True)
+                with open(metadata_filepath, 'w') as f:
+                    json.dump(st.session_state.metadata_data, f, indent=2)
+                
+                st.success("✅ Metadata saved successfully!")
+            except Exception as e:
+                st.error(f"❌ Error saving metadata: {str(e)}")
+    
+    with col3:
+        if st.button("🔄 Regenerate", type="secondary"):
+            st.session_state.metadata_need_generation = True
             st.rerun()

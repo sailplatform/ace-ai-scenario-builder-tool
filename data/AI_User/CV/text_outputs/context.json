@@ -1,0 +1,19 @@
+{
+  "course": {
+    "course_title": "AI User",
+    "course_objectives": ""
+  },
+  "project": {
+    "module_title": "CV",
+    "module_description": "",
+    "project_title": "CV",
+    "project_goal": "s",
+    "project_learning_objectives": ""
+  },
+  "audience": {
+    "student_description": "army",
+    "education_level": "undergrad_intro",
+    "prerequisites": "",
+    "class_size": 25
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "course": {
+    "course_title": "AI User",
+    "course_objectives": ""
+  },
+  "project": {
+    "module_title": "LLM",
+    "module_description": "",
+    "project_title": "love LLMs",
+    "project_goal": "goal",
+    "project_learning_objectives": ""
+  },
+  "audience": {
+    "student_description": "some description",
+    "education_level": "undergrad_intro",
+    "prerequisites": "some random",
+    "class_size": 25
+  },
+  "style_pack": {
+    "palette": "blue",
+    "vibe": "flat_illustration",
+    "aspect_ratio": "4:3"
+  }
+}

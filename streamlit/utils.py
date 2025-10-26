@@ -26,7 +26,7 @@ def save_to_json():
     os.makedirs(text_outputs_path, exist_ok=True)
     
     # Save JSON file
-    filename = "module_generation_information.json"
+    filename = "context.json"
     filepath = os.path.join(text_outputs_path, filename)
     
     with open(filepath, 'w') as f:
@@ -48,6 +48,7 @@ def get_existing_courses():
 
 
 def get_existing_modules(course_name):
+    print(f"Getting existing modules for course: {course_name}")
     """Get list of existing modules for a given course"""
     modules = []
     course_name_clean = course_name.lower().replace(' ', '_')

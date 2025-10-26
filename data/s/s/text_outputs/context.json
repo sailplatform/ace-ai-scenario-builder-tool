@@ -1,0 +1,19 @@
+{
+  "course": {
+    "course_title": "s",
+    "course_objectives": ""
+  },
+  "project": {
+    "module_title": "s",
+    "module_description": "",
+    "project_title": "s",
+    "project_goal": "s",
+    "project_learning_objectives": ""
+  },
+  "audience": {
+    "student_description": "s",
+    "education_level": "undergrad_intro",
+    "prerequisites": "",
+    "class_size": 25
+  }
+}

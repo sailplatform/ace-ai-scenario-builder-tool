@@ -1,0 +1,3 @@
+{
+  "scenario_description": "In a busy metropolitan hospital, Dr. Aneesa Patel and her team of interns are challenged with analyzing a high volume of X-ray images for fractures. They require an image segmentation tool capable of distinguishing bone structure from surrounding tissues to speed up the diagnostic process. The AI Practitioner class is assigned the task of creating a solution that can handle anatomical variations and be resource-good."
+}

@@ -1,0 +1,35 @@
+{
+  "num_screens": 5,
+  "style_pack": {
+    "palette": "Cool blues and clinical whites",
+    "vibe": "Modern, clean, scientific",
+    "aspect_ratio": "16:9"
+  },
+  "overall_tone": "Professional and technical",
+  "actors": [
+    {
+      "name": "Dr. Aneesa Patel",
+      "role": "Experienced Radiologist",
+      "background": "Dr. Patel has over 15 years of experience in radiology and leads a team of interns at a metropolitan hospital. She is well-versed in diagnostic imaging and has published several papers on radiological advancements.",
+      "communication_style": "Clear, concise, and authoritative with a focus on precision and technical details"
+    },
+    {
+      "name": "Intern Alex Kim",
+      "role": "Radiology Intern",
+      "background": "Alex is in the second year of their residency, enthusiastic about medical AI applications. They have a Master's degree in Biomedical Engineering and are keen on integrating technology with healthcare.",
+      "communication_style": "Eager, inquisitive, and tech-savvy, often using jargon and technical terms"
+    },
+    {
+      "name": "Intern Jamie Lopez",
+      "role": "Radiology Intern",
+      "background": "Jamie is a first-year intern with a strong academic background and interest in diagnostic radiology. They are particularly interested in how AI can be used to improve patient outcomes.",
+      "communication_style": "Attentive and thoughtful, with a tendency to ask clarifying questions for understanding complex concepts"
+    },
+    {
+      "name": "AI Practitioner Chris Wu",
+      "role": "AI Specialist",
+      "background": "Chris Wu is a seasoned AI practitioner with experience in developing medical imaging software. With a Ph.D. in Computer Science, Chris is adept at creating AI solutions that cater to the specific needs of healthcare professionals.",
+      "communication_style": "Analytical and data-driven, often communicating through visual aids and graphs"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "course": {
+    "course_title": "AI User",
+    "course_objectives": ""
+  },
+  "project": {
+    "module_title": "Transformers",
+    "module_description": "",
+    "project_title": " Build Your Own Transformer",
+    "project_goal": "Something",
+    "project_learning_objectives": ""
+  },
+  "audience": {
+    "student_description": "army veterans",
+    "education_level": "undergrad_intro",
+    "prerequisites": "",
+    "class_size": 25,
+    "additional_info": "new information"
+  }
+}

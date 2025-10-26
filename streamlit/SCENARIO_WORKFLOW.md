@@ -80,12 +80,18 @@ All generated content respects the user's style preferences:
 
 ## Usage Flow
 
-1. Complete original workflow (Steps 1-6)
-2. Click "Start Scenario Generation" in Step 6
-3. Generate scenario description and image vibe (Step 7)
-4. Create and edit screen captions (Step 8)
-5. Generate image descriptions from captions (Step 9)
-6. Review and export complete scenario (Step 10)
+1. Complete initial setup workflow (Steps 1-4):
+   - Step 1: Project Setup (combined form with essential info)
+   - Step 2: Review & Save
+   - Step 3: Next Phase
+   - Step 4: Scenario Generation (choose from AI-generated options)
+2. Continue with extended workflow if needed (Steps 5+):
+   - Additional scenario refinement
+   - Screen management
+   - Image description generation
+   - Final review and export
+
+**Note**: Optional project details can be added at any time via the sidebar panel during steps 1-4.
 
 ## Benefits
 
