@@ -13,6 +13,7 @@ def initialize_session_state():
             "course": {},
             "project": {},
             "audience": {},
+            "additional_info": {},
         }
     if 'workflow_mode' not in st.session_state:
         st.session_state.workflow_mode = None  # 'new', 'existing_course', 'existing_module'
@@ -24,6 +25,7 @@ def get_default_form_data():
         "course": {},
         "project": {},
         "audience": {},
+        "additional_info": {},
     }
 
 

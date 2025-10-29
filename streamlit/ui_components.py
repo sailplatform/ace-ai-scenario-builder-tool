@@ -98,109 +98,124 @@ def display_optional_details_modal():
         
         # Required Information Section
         with st.expander("✏️ Required Information", expanded=False):
-            project_title = st.text_input(
-                "Project Title *",
-                value=st.session_state.form_data["project"].get("project_title", ""),
-                key="modal_project_title"
-            )
-            
-            project_goal = st.text_area(
-                "Project Goal *",
-                value=st.session_state.form_data["project"].get("project_goal", ""),
-                height=100,
-                key="modal_project_goal"
+            course_title = st.text_input(
+                "What course or program is the scenario generation for?",
+                value=st.session_state.form_data["course"].get("course_title", ""),
+                help="So the scenario fits the subject and level of your learners.",
+                key="modal_course_title",
+                placeholder="Enter the course or program name, e.g., Introduction to Data Analysis, Strategic Leadership"
             )
             
             student_description = st.text_area(
-                "Brief Student Description *",
+                "Who are the learners for this course?",
                 value=st.session_state.form_data["audience"].get("student_description", ""),
+                help="This helps shape the tone and professional context of the scenario.",
+                placeholder="Describe your learners, e.g., university students, early-career professionals",
                 height=100,
                 key="modal_student_description"
             )
+            
+            module_title = st.text_input(
+                "Which topic or module should the scenario focus on?",
+                value=st.session_state.form_data["project"].get("module_title", ""),
+                help="So the scenario stays aligned with what learners are currently studying.",
+                key="modal_module_title",
+                placeholder="Write the topic or module name, e.g., Ethical Decision-Making, Data Visualization"
+            )
+            
+            key_concept = st.text_area(
+                "What is the key concept or learning objective that the scenario should highlight?",
+                value=st.session_state.form_data["project"].get("key_concept", ""),
+                help="This becomes the main idea or concept the scenario brings to life.",
+                height=100,
+                key="modal_key_concept",
+                placeholder="List one or two key ideas, e.g., analyzing information to make a decision"
+            )
+            
+            existing_challenge = st.text_area(
+                "What do the learners already know about this topic?",
+                value=st.session_state.form_data["project"].get("existing_challenge", ""),
+                help="This helps set the right level of challenge.",
+                height=100,
+                key="modal_existing_challenge",
+                placeholder="Mention what learners already understand, e.g., they know basic tools"
+            )
         
         # Optional Details Section
-        with st.expander("📋 Optional Details", expanded=False):
-            course_objectives = st.text_area(
-                "Course Learning Objectives",
-                value=st.session_state.form_data["course"].get("course_objectives", ""),
-                help="List main learning objectives (one per line or comma separated)",
-                height=100,
-                key="optional_course_objectives"
-            )
+        # with st.expander("📋 Additional Information", expanded=False):
+            # course_objectives = st.text_area(
+            #     "Course Learning Objectives",
+            #     value=st.session_state.form_data["course"].get("course_objectives", ""),
+            #     help="List main learning objectives (one per line or comma separated)",
+            #     height=100,
+            #     key="optional_course_objectives"
+            # )
             
-            module_description = st.text_area(
-                "Module Description",
-                value=st.session_state.form_data["project"].get("module_description", ""),
-                help="Brief description of what this module covers",
-                height=80,
-                key="optional_module_description"
-            )
+            # module_description = st.text_area(
+            #     "Module Description",
+            #     value=st.session_state.form_data["project"].get("module_description", ""),
+            #     help="Brief description of what this module covers",
+            #     height=80,
+            #     key="optional_module_description"
+            # )
             
-            project_learning_objectives = st.text_area(
-                "Project Learning Objectives",
-                value=st.session_state.form_data["project"].get("project_learning_objectives", ""),
-                help="Specific learning objectives for this project (one per line or separated by commas)",
-                height=100,
-                key="optional_project_objectives"
-            )
+            # project_learning_objectives = st.text_area(
+            #     "Project Learning Objectives",
+            #     value=st.session_state.form_data["project"].get("project_learning_objectives", ""),
+            #     help="Specific learning objectives for this project (one per line or separated by commas)",
+            #     height=100,
+            #     key="optional_project_objectives"
+            # )
             
-            education_levels = [
-                "middle_school", "high_school", "undergrad_intro", "undergrad_advanced", 
-                "grad_course", "bootcamp", "professional", "other"
-            ]
+            # education_levels = [
+            #     "middle_school", "high_school", "undergrad_intro", "undergrad_advanced", 
+            #     "grad_course", "bootcamp", "professional", "other"
+            # ]
             
-            education_level = st.selectbox(
-                "Education Level",
-                options=education_levels,
-                index=education_levels.index(st.session_state.form_data["audience"].get("education_level", "undergrad_intro")),
-                help="Select the most appropriate education level",
-                key="optional_education_level"
-            )
+            # education_level = st.selectbox(
+            #     "Education Level",
+            #     options=education_levels,
+            #     index=education_levels.index(st.session_state.form_data["audience"].get("education_level", "undergrad_intro")),
+            #     help="Select the most appropriate education level",
+            #     key="optional_education_level"
+            # )
             
-            prerequisites = st.text_area(
-                "Prerequisites",
-                value=st.session_state.form_data["audience"].get("prerequisites", ""),
-                help="List all prerequisites (one per line or separated by commas)",
-                height=100,
-                key="optional_prerequisites"
-            )
+            # prerequisites = st.text_area(
+            #     "Prerequisites",
+            #     value=st.session_state.form_data["audience"].get("prerequisites", ""),
+            #     help="List all prerequisites (one per line or separated by commas)",
+            #     height=100,
+            #     key="optional_prerequisites"
+            # )
             
-            class_size = st.number_input(
-                "Class Size",
-                min_value=1,
-                max_value=1000,
-                value=st.session_state.form_data["audience"].get("class_size", 25),
-                help="Expected number of students",
-                key="optional_class_size"
-            )
+            # class_size = st.number_input(
+            #     "Class Size",
+            #     min_value=1,
+            #     max_value=1000,
+            #     value=st.session_state.form_data["audience"].get("class_size", 25),
+            #     help="Expected number of students",
+            #     key="optional_class_size"
+            # )
 
-            additional_info = st.text_area(
-                "Additional Information",
-                value=st.session_state.form_data["audience"].get("additional_info", ""),
-                help="Additional information about the project",
-                height=100,
-                key="optional_additional_info"
-            )
-        
+        additional_info = st.text_area(
+            "Additional Information",
+            value=st.session_state.form_data["audience"].get("additional_info", ""),
+            help="Additional information about the project",
+            height=100,
+            key="optional_additional_info"
+        )
+    
         st.markdown("")
         if st.button("💾 Save All Details", type="primary", use_container_width=True):
-            course_title = st.session_state.form_data["course"].get("course_title", "")
-            module_title = st.session_state.form_data["project"].get("module_title", "")
-            
-            if not course_title or not module_title or not project_title or not project_goal or not student_description:
+            if not course_title or not module_title or not student_description or not key_concept or not existing_challenge:
                 st.error("❌ All required fields must be filled.")
             else:
-                # Update form data with all fields
-                st.session_state.form_data["course"]["course_objectives"] = course_objectives
-                st.session_state.form_data["project"]["module_description"] = module_description
-                st.session_state.form_data["project"]["project_title"] = project_title
-                st.session_state.form_data["project"]["project_goal"] = project_goal
-                st.session_state.form_data["project"]["project_learning_objectives"] = project_learning_objectives
+                st.session_state.form_data["course"]["course_title"] = course_title
+                st.session_state.form_data["project"]["module_title"] = module_title
+                st.session_state.form_data["project"]["key_concept"] = key_concept
+                st.session_state.form_data["project"]["existing_challenge"] = existing_challenge
                 st.session_state.form_data["audience"]["student_description"] = student_description
-                st.session_state.form_data["audience"]["education_level"] = education_level
-                st.session_state.form_data["audience"]["prerequisites"] = prerequisites
-                st.session_state.form_data["audience"]["class_size"] = class_size
-                st.session_state.form_data["audience"]["additional_info"] = additional_info
+                st.session_state.form_data["additional_info"] = additional_info
                 
                 # Save to JSON file
                 try:

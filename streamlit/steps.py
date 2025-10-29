@@ -30,91 +30,73 @@ def generate_scenario_summaries_with_gpt(form_data, existing_scenario_data):
         # Extract all fields present in example context.json and include if they exist
         # Course information
         course_title = form_data.get("course", {}).get("course_title", "")
-        course_objectives = form_data.get("course", {}).get("course_objectives", "")
 
         # Project/module information
         module_title = form_data.get("project", {}).get("module_title", "")
-        module_description = form_data.get("project", {}).get("module_description", "")
-        project_title = form_data.get("project", {}).get("project_title", "")
-        project_goal = form_data.get("project", {}).get("project_goal", "")
-        project_learning_objectives = form_data.get("project", {}).get("project_learning_objectives", "")
+        key_concept = form_data.get("project", {}).get("key_concept", "")
+        existing_challenge = form_data.get("project", {}).get("existing_challenge", "")
 
         # Audience information
         student_description = form_data.get("audience", {}).get("student_description", "")
-        education_level = form_data.get("audience", {}).get("education_level", "")
-        prerequisites = form_data.get("audience", {}).get("prerequisites", "")
-        class_size = form_data.get("audience", {}).get("class_size", "")
-        audience_additional_info = form_data.get("audience", {}).get("additional_info", "")
-
-        # Style pack information
-        palette = form_data.get("style_pack", {}).get("palette", "")
-        vibe = form_data.get("style_pack", {}).get("vibe", "")
-        aspect_ratio = form_data.get("style_pack", {}).get("aspect_ratio", "")
 
         # General additional_info (not audience)
         additional_info = form_data.get("additional_info", "")
-
         
         # Extract existing scenario context if available
         existing_description = existing_scenario_data.get("scenario_description", "") if existing_scenario_data else ""
         
         # Create the prompt for GPT-4.1
         prompt = f"""
-You are an expert educational scenario designer. Based on the following course and project information, generate exactly 3 short, engaging scenario summaries that would motivate students to complete this project.
+You are an expert instructional designer and learning experience designer who creates short, realistic, and motivating learning scenarios for higher education and professional audiences. Each scenario should connect the key concept to real-world practice, reflect the learners’ context, and feel authentic to their field.
 
-Course: {course_title}
-Course Objectives: {course_objectives}
+Using the information below, generate exactly 3 short scenario summaries (2–3 sentences each) that will help learners see the relevance and value of this concept or skill.
+Inputs:
+- Course: {course_title}
+- Learner Profile: {student_description}
+- Module Description: {module_title}
+- Key Concept or Learning Objective: {key_concept}
+- Learners’ Existing Knowledge: {existing_challenge}
+- Additional Information: {additional_info}
 
-Module Title: {module_title}
-Module Description: {module_description}
+Your task:
 
-Project Title: {project_title}
-Project Goal: {project_goal}
-Project Learning Objectives: {project_learning_objectives}
+Create 3 distinct scenario summaries that:
+1. Are **realistic and relevant** to the learner profile and course context.
+2. Clearly illustrate **how the key concept or skill applies in practice**.
+3. Present a situation or challenge that encourages **critical thinking or decision-making**.
+4. Use **authentic, inclusive examples** (diverse names, roles, and settings).
+5. Specify a **clear setting or context** (e.g., workplace, community, field site, research team, or organizational meeting).
+6. Feel **motivating and purposeful** — learners should understand why the skill or concept matters.
 
-Student Profile: {student_description}
-Education Level: {education_level}
-Prerequisites: {prerequisites}
-Class Size: {class_size}
+**Format your response as:**
+SCENARIO 1: [summary with realistic context, diverse characters, and clear challenge]
+SCENARIO 2: [summary with realistic context, diverse characters, and clear challenge]
+SCENARIO 3: [summary with realistic context, diverse characters, and clear challenge]
 
-Palette: {palette}
-Vibe: {vibe}
-Aspect Ratio: {aspect_ratio}
+**IMPORTANT: Each scenario must:**
+- Write in plain, professional language suitable for higher education or adult learners.
+- Keep tone **practical, motivational, and grounded in real-world settings**.
+- Avoid jargon or overly academic phrasing.
+- Focus on what’s happening and why it matters — not on lengthy backstories or character details.
 
-Additional Information: {additional_info}
+Example response:
+Course: Social Media Platforms
+Learner Profile: Social Media Managers
+Module Description: Content Moderation
+Key Concept or Learning Objective: Understanding LLMs in content moderation
+Learners’ Existing Knowledge: Basic understanding of content moderation
+Additional Information: LLMs are becoming increasingly important in content moderation.
 
-Existing Scenario Context: {existing_description}
-
-Generate 3 distinct scenario summaries (2-3 sentences long) that:
-1. Are realistic and relatable to the target student audience
-2. Present a clear challenge or problem to solve
-3. Connect to the project goals and learning objectives
-4. Are engaging and motivating
-5. Are appropriate for the education level
-6. Include DIVERSE characters (represent different ethnicities, genders, ages, backgrounds)
-7. Specify the backdrop/setting where the scenario takes place
-
-IMPORTANT: Each scenario must:
-- Include diverse characters (avoid only white/male characters)
-- Specify the setting/backdrop (e.g., "in a tech startup", "at a community center", "in a research lab")
-- Keep character details brief - focus on the setting context, not detailed expressions
-
-Format your response as:
-SCENARIO 1: [summary with diverse characters and setting]
-SCENARIO 2: [summary with diverse characters and setting] 
-SCENARIO 3: [summary with diverse characters and setting]
+A suitable scenario summary could be:
+safeChats is a fast-growing social media platform with active users worldwide. Their Trust and Safety team needs help strengthening content moderation systems and reducing costs. Currently, they use traditional sentiment analysis that flags posts as hate speech or not, but provides no explanations. Users complain about unfair flagging, and human reviewers spend extra time interpreting decisions. Their system also performs poorly in other languages. They're exploring Generative AI and LLMs because these can understand context, sarcasm, and nuance in multiple languages, explain reasoning in natural language, suggest better moderation responses, and continuously improve through feedback loops.
 """
         
         # Call GPT-4.1
         response = client.chat.completions.create(
             model="gpt-4-1106-preview",  # GPT-4.1 model
             messages=[
-                {"role": "system", "content": """You are an expert educational scenario designer who creates engaging, realistic scenarios for student projects. 
-
-CONTEXT EXAMPLE: safeChats is a fast-growing social media platform with active users worldwide. Their Trust and Safety team needs help strengthening content moderation systems and reducing costs. Currently, they use traditional sentiment analysis that flags posts as hate speech or not, but provides no explanations. Users complain about unfair flagging, and human reviewers spend extra time interpreting decisions. Their system also performs poorly in other languages. They're exploring Generative AI and LLMs because these can understand context, sarcasm, and nuance in multiple languages, explain reasoning in natural language, suggest better moderation responses, and continuously improve through feedback loops.
-
-Your scenarios should focus on the overall setting context, like the example above, not detailed character descriptions."""},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": "You are a helpful assistant that follows the provided task instructions carefully."},
+                {"role": "user", "content": prompt},
             ],
             max_tokens=800,
             temperature=0.7
@@ -308,53 +290,48 @@ def step_project_setup():
     st.markdown('<div class="step-description">Let\'s set up your project with the essential information.</div>', unsafe_allow_html=True)
     
     with st.form("project_setup_form"):
-        st.subheader("Course & Module")
-        
         course_title = st.text_input(
-            "Course Title *",
+            "What course or program is the scenario generation for?",
             value=st.session_state.form_data["course"].get("course_title", ""),
-            help="Enter the name of your course"
+            help="So the scenario fits the subject and level of your learners.",
+            placeholder="Enter the course or program name, e.g., Introduction to Data Analysis, Strategic Leadership"
+        )
+        
+        student_description = st.text_area(
+            "Who are the learners for this course?",
+            value=st.session_state.form_data["audience"].get("student_description", ""),
+            help="This helps shape the tone and professional context of the scenario.",
+            placeholder="Describe your learners, e.g., university students, early-career professionals",
+            height=100
         )
         
         module_title = st.text_input(
-            "Module Title *",
+            "Which topic or module should the scenario focus on?",
             value=st.session_state.form_data["project"].get("module_title", ""),
-            help="Name of the module this project belongs to"
+            help="So the scenario stays aligned with what learners are currently studying.",
+            placeholder="Write the topic or module name, e.g., Ethical Decision-Making, Data Visualization"
         )
         
-        st.subheader("Project Details")
-        
-        project_title = st.text_input(
-            "Project Title *",
-            value=st.session_state.form_data["project"].get("project_title", ""),
-            help="Name of the specific project"
-        )
-        
-        project_goal = st.text_area(
-            "Project Goal *",
-            value=st.session_state.form_data["project"].get("project_goal", ""),
-            help="What should students achieve by completing this project?",
+        key_concept = st.text_area(
+            "What is the key concept or learning objective that the scenario should highlight?",
+            value=st.session_state.form_data["project"].get("key_concept", ""),
+            help="This becomes the main idea or concept the scenario brings to life.",
+            placeholder="List one or two key ideas, e.g., analyzing information to make a decision",
             height=100
         )
         
-        st.subheader("Student Profile")
-        
-        student_description = st.text_area(
-            "Brief Student Description *",
-            value=st.session_state.form_data["audience"].get("student_description", ""),
-            help="Briefly describe who your students are (background, experience level, etc.)",
-            placeholder="e.g., Army veterans with limited computer science experience",
+        existing_challenge = st.text_area(
+            "What do the learners already know about this topic?",
+            value=st.session_state.form_data["project"].get("existing_challenge", ""),
+            help="This helps set the right level of challenge.",
+            placeholder="Mention what learners already understand, e.g., they know basic tools",
             height=100
         )
-        
-        st.markdown("---")
-        st.markdown("💡 **Tip:** You can add optional details like course objectives, learning objectives, education level, prerequisites, and class size at any time, using the sidebar.")
         
         submitted = st.form_submit_button("Continue to Review →", type="primary")
         
         if submitted:
-            if all([course_title, module_title, project_title, project_goal, student_description]):
-                # Save all data with defaults for optional fields
+            if all([course_title, module_title, key_concept, existing_challenge, student_description]):
                 st.session_state.form_data["course"] = {
                     "course_title": course_title,
                     "course_objectives": st.session_state.form_data["course"].get("course_objectives", "")
@@ -362,8 +339,8 @@ def step_project_setup():
                 st.session_state.form_data["project"] = {
                     "module_title": module_title,
                     "module_description": st.session_state.form_data["project"].get("module_description", ""),
-                    "project_title": project_title,
-                    "project_goal": project_goal,
+                    "key_concept": key_concept,
+                    "existing_challenge": existing_challenge,
                     "project_learning_objectives": st.session_state.form_data["project"].get("project_learning_objectives", "")
                 }
                 st.session_state.form_data["audience"] = {
@@ -375,7 +352,7 @@ def step_project_setup():
                 st.session_state.current_step = 2
                 st.rerun()
             else:
-                st.error("Please fill in all required fields (marked with *)")
+                st.error("Please fill in all required fields")
 
 def step_review_export():
     """Step 2: Review and Save Configuration"""
@@ -385,28 +362,24 @@ def step_review_export():
     # Display all collected information
     st.subheader("📚 Course Information")
     course_data = st.session_state.form_data["course"]
-    st.markdown(f"**Course Title:** {course_data.get('course_title', 'Not provided')}")
+    st.markdown(f"**Course/Program:** {course_data.get('course_title', 'Not provided')}")
     if course_data.get('course_objectives'):
         st.markdown(f"**Course Objectives:** {course_data.get('course_objectives', 'Not provided')}")
     
-    st.subheader("🎯 Project Information")
+    st.subheader("🎯 Module & Learning Information")
     project_data = st.session_state.form_data["project"]
-    st.markdown(f"**Module Title:** {project_data.get('module_title', 'Not provided')}")
+    st.markdown(f"**Module/Topic:** {project_data.get('module_title', 'Not provided')}")
     if project_data.get('module_description'):
         st.markdown(f"**Module Description:** {project_data.get('module_description', 'Not provided')}")
-    st.markdown(f"**Project Title:** {project_data.get('project_title', 'Not provided')}")
-    st.markdown(f"**Project Goal:** {project_data.get('project_goal', 'Not provided')}")
+    st.markdown(f"**Key Concept:** {project_data.get('key_concept', 'Not provided')}")
+    st.markdown(f"**Existing Challenge:** {project_data.get('existing_challenge', 'Not provided')}")
     if project_data.get('project_learning_objectives'):
-        st.markdown(f"**Project Learning Objectives:** {project_data.get('project_learning_objectives', 'Not provided')}")
+        st.markdown(f"**Learning Objectives:** {project_data.get('project_learning_objectives', 'Not provided')}")
     
     st.subheader("👥 Audience")
     audience_data = st.session_state.form_data["audience"]
-    st.markdown(f"**Student Description:** {audience_data.get('student_description', 'Not provided')}")
-    st.markdown(f"**Education Level:** {audience_data.get('education_level', 'Not provided')}")
-    if audience_data.get('prerequisites'):
-        st.markdown(f"**Prerequisites:** {audience_data.get('prerequisites', 'Not provided')}")
-    if audience_data.get('class_size'):
-        st.markdown(f"**Class Size:** {audience_data.get('class_size')}")
+    st.markdown(f"**Learner Description:** {audience_data.get('student_description', 'Not provided')}")
+
     
     # Save and continue options
     st.subheader("💾 Save Configuration")
@@ -631,7 +604,7 @@ def step_scenario_metadata():
 Scenario: {final_scenario}
 
 Course: {st.session_state.form_data["course"].get("course_title", "")}
-Project: {st.session_state.form_data["project"].get("project_title", "")}
+Module: {st.session_state.form_data["project"].get("module_title", "")}
 
 Generate:
 1. Number of screens (typically 3-7)
