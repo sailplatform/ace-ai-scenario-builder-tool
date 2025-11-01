@@ -1,0 +1,21 @@
+{
+  "course": {
+    "course_title": "Introduction to Data Analytics",
+    "course_description": "Using AI tools for content moderation.",
+    "course_objectives": ""
+  },
+  "project": {
+    "module_title": "Data VIsualization",
+    "module_description": "",
+    "key_concept": "Analyzing information for social media.",
+    "existing_challenge": "Basic PyTorch.",
+    "project_learning_objectives": ""
+  },
+  "audience": {
+    "professional_domain": "Marketing Professionals",
+    "education_level": "undergrad_intro",
+    "prerequisites": "",
+    "class_size": 25
+  },
+  "additional_info": {}
+}

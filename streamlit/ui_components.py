@@ -56,7 +56,8 @@ def display_progress():
             "Project Setup",
             "Review & Save",
             "Scenario Generation",
-            "Metadata & Actors"
+            "Metadata & Actors",
+            "Screen Generation"
         ]
         
         progress = (st.session_state.current_step - 1) / len(steps)
@@ -98,30 +99,38 @@ def display_optional_details_modal():
         
         # Required Information Section
         with st.expander("✏️ Required Information", expanded=False):
-            course_title = st.text_input(
-                "What course or program is the scenario generation for?",
-                value=st.session_state.form_data["course"].get("course_title", ""),
-                help="So the scenario fits the subject and level of your learners.",
-                key="modal_course_title",
-                placeholder="Enter the course or program name, e.g., Introduction to Data Analysis, Strategic Leadership"
-            )
+            # course_title = st.text_input(
+            #     "What course or program is the scenario generation for?",
+            #     value=st.session_state.form_data["course"].get("course_title", ""),
+            #     help="So the scenario fits the subject and level of your learners.",
+            #     key="modal_course_title",
+            #     placeholder="Enter the course or program name, e.g., Introduction to Data Analysis"
+            # )
             
-            student_description = st.text_area(
-                "Who are the learners for this course?",
-                value=st.session_state.form_data["audience"].get("student_description", ""),
+            professional_domain = st.text_input(
+                "What is the learner's professional domain?",
+                value=st.session_state.form_data["audience"].get("professional_domain", ""),
                 help="This helps shape the tone and professional context of the scenario.",
-                placeholder="Describe your learners, e.g., university students, early-career professionals",
-                height=100,
-                key="modal_student_description"
+                key="modal_professional_domain",
+                placeholder="e.g., Marketing professionals, Social media managers, Data analysts"
             )
             
-            module_title = st.text_input(
-                "Which topic or module should the scenario focus on?",
-                value=st.session_state.form_data["project"].get("module_title", ""),
-                help="So the scenario stays aligned with what learners are currently studying.",
-                key="modal_module_title",
-                placeholder="Write the topic or module name, e.g., Ethical Decision-Making, Data Visualization"
+            course_description = st.text_area(
+                "What is a high-level course description?",
+                value=st.session_state.form_data["course"].get("course_description", ""),
+                help="Provide context about what the course covers overall.",
+                height=100,
+                key="modal_course_description",
+                placeholder="e.g., This course teaches students how to use AI tools..."
             )
+            
+            # module_title = st.text_input(
+            #     "Which topic or module should the scenario focus on?",
+            #     value=st.session_state.form_data["project"].get("module_title", ""),
+            #     help="So the scenario stays aligned with what learners are currently studying.",
+            #     key="modal_module_title",
+            #     placeholder="Write the topic or module name, e.g., Ethical Decision-Making"
+            # )
             
             key_concept = st.text_area(
                 "What is the key concept or learning objective that the scenario should highlight?",
@@ -207,14 +216,15 @@ def display_optional_details_modal():
     
         st.markdown("")
         if st.button("💾 Save All Details", type="primary", use_container_width=True):
-            if not course_title or not module_title or not student_description or not key_concept or not existing_challenge:
+            if not course_title or not professional_domain or not course_description or not module_title or not key_concept or not existing_challenge:
                 st.error("❌ All required fields must be filled.")
             else:
                 st.session_state.form_data["course"]["course_title"] = course_title
+                st.session_state.form_data["course"]["course_description"] = course_description
                 st.session_state.form_data["project"]["module_title"] = module_title
                 st.session_state.form_data["project"]["key_concept"] = key_concept
                 st.session_state.form_data["project"]["existing_challenge"] = existing_challenge
-                st.session_state.form_data["audience"]["student_description"] = student_description
+                st.session_state.form_data["audience"]["professional_domain"] = professional_domain
                 st.session_state.form_data["additional_info"] = additional_info
                 
                 # Save to JSON file
@@ -261,5 +271,73 @@ def display_optional_details_modal():
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")
             
-            st.markdown("---")
+            
+            
+            # Show metadata and actors for step 5+
+            if st.session_state.current_step >= 5:
+                st.markdown("---")
+                st.subheader("🎬 Metadata & Actors")
+                with st.expander("🎬 Metadata & Actors"):
+                    metadata = st.session_state.get("metadata_data", {})
+                    print(metadata)
+                    if metadata:
+                        num_screens = st.number_input("Number of Screens", value=metadata.get("num_screens", 5), key="sidebar_num_screens", min_value=1, max_value=20)
+                        aspect_ratio = st.text_input("Aspect Ratio", value=metadata.get("aspect_ratio", "16:9"), key="sidebar_aspect_ratio")
+                        visual_style = st.text_input("Visual Style", value=metadata.get("visual_style", "Low-poly graphics, vector graphics, flat color palette, minimalist, simple vector style"), key="sidebar_visual_style")
+                        
+                        actors = metadata.get("actors", [])
+                        st.markdown("**Actors:**")
+                        for i, actor in enumerate(actors):
+                            st.markdown(f"**Actor {i+1}: {actor.get('name', '')}**")
+                            st.text_input(
+                                "Name",
+                                value=actor.get("name", ""),
+                                key=f"sidebar_actor_{i}_name"
+                            )
+                            st.text_input(
+                                "Role",
+                                value=actor.get("role", ""),
+                                key=f"sidebar_actor_{i}_role"
+                            )
+                            st.text_area(
+                                "Purpose",
+                                value=actor.get("purpose", ""),
+                                key=f"sidebar_actor_{i}_purpose",
+                                height=80
+                            )
+                            st.markdown("---")
+
+                        if st.button("💾 Update Metadata & Actors", use_container_width=True):
+                            try:
+                                actors_data = []
+                                for i in range(len(actors)):
+                                    actors_data.append({
+                                        "name": st.session_state[f"sidebar_actor_{i}_name"],
+                                        "role": st.session_state[f"sidebar_actor_{i}_role"],
+                                        "purpose": st.session_state[f"sidebar_actor_{i}_purpose"]
+                                    })
+                                st.session_state.metadata_data.update({
+                                    "num_screens": num_screens,
+                                    "aspect_ratio": aspect_ratio,
+                                    "visual_style": visual_style,
+                                    "actors": actors_data
+                                })
+                                
+                                course_title = st.session_state.form_data["course"].get("course_title", "")
+                                module_title = st.session_state.form_data["project"].get("module_title", "")
+                                course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                                module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                                metadata_filepath = f"data/{course_name}/{module_name}/text_outputs/scenario_metadata.json"
+                                import os
+                                os.makedirs(os.path.dirname(metadata_filepath), exist_ok=True)
+                                import json
+                                with open(metadata_filepath, 'w') as f:
+                                    json.dump(st.session_state.metadata_data, f, indent=2)
+                                
+                                st.success("✅ Updated!")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Error: {str(e)}")
+            
+                st.markdown("---")
         

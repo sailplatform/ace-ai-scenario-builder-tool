@@ -1,0 +1,28 @@
+{
+  "course": {
+    "course_title": "AI Practitioner",
+    "course_objectives": "..."
+  },
+  "project": {
+    "module_title": "Retail",
+    "module_description": "...",
+    "project_title": "Image Segmentation",
+    "project_goal": "..",
+    "project_learning_objectives": "..",
+    "key_concept": "N/A",
+    "existing_challenge": "N/A"
+  },
+  "audience": {
+    "student_description": "Medical Practitioners",
+    "education_level": "undergrad_intro",
+    "prerequisites": "pytorch",
+    "class_size": 25,
+    "additional_info": "sd"
+  },
+  "style_pack": {
+    "palette": "blue",
+    "vibe": "flat_illustration",
+    "aspect_ratio": "4:3"
+  },
+  "additional_info": "sd"
+}

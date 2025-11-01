@@ -30,6 +30,7 @@ def generate_scenario_summaries_with_gpt(form_data, existing_scenario_data):
         # Extract all fields present in example context.json and include if they exist
         # Course information
         course_title = form_data.get("course", {}).get("course_title", "")
+        course_description = form_data.get("course", {}).get("course_description", "")
 
         # Project/module information
         module_title = form_data.get("project", {}).get("module_title", "")
@@ -37,7 +38,7 @@ def generate_scenario_summaries_with_gpt(form_data, existing_scenario_data):
         existing_challenge = form_data.get("project", {}).get("existing_challenge", "")
 
         # Audience information
-        student_description = form_data.get("audience", {}).get("student_description", "")
+        professional_domain = form_data.get("audience", {}).get("professional_domain", "")
 
         # General additional_info (not audience)
         additional_info = form_data.get("additional_info", "")
@@ -47,15 +48,16 @@ def generate_scenario_summaries_with_gpt(form_data, existing_scenario_data):
         
         # Create the prompt for GPT-4.1
         prompt = f"""
-You are an expert instructional designer and learning experience designer who creates short, realistic, and motivating learning scenarios for higher education and professional audiences. Each scenario should connect the key concept to real-world practice, reflect the learners’ context, and feel authentic to their field.
+You are an expert instructional designer and learning experience designer who creates short, realistic, and motivating learning scenarios for higher education and professional audiences. Each scenario should connect the key concept to real-world practice, reflect the learners' context, and feel authentic to their field.
 
 Using the information below, generate exactly 3 short scenario summaries (2–3 sentences each) that will help learners see the relevance and value of this concept or skill.
 Inputs:
 - Course: {course_title}
-- Learner Profile: {student_description}
+- Course Description: {course_description}
+- Professional Domain: {professional_domain}
 - Module Description: {module_title}
 - Key Concept or Learning Objective: {key_concept}
-- Learners’ Existing Knowledge: {existing_challenge}
+- Learners' Existing Knowledge: {existing_challenge}
 - Additional Information: {additional_info}
 
 Your task:
@@ -196,7 +198,7 @@ def step_existing_content_selection():
     """Step 0.5: Select existing course and module"""
     st.markdown('<div class="step-header">📚 Select Existing Content</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Choose an existing course and module to build upon. After loading, you\'ll proceed directly to scenario generation.</div>', unsafe_allow_html=True)
-
+    
     existing_courses = get_existing_courses()
     if not existing_courses:
         st.error("No existing courses found. Please create a new project.")
@@ -206,7 +208,7 @@ def step_existing_content_selection():
             st.session_state.current_step = 0
             st.rerun()
         return
-
+    
     # Initialize single sources of truth
     if "selected_course" not in st.session_state or st.session_state.selected_course not in existing_courses:
         st.session_state.selected_course = existing_courses[0]
@@ -230,7 +232,7 @@ def step_existing_content_selection():
 
     # Modules depend on the current course
     modules_for_course = get_existing_modules(st.session_state.selected_course)
-
+        
     st.subheader("Module Selection")
     if modules_for_course:
         # Ensure module value is valid for this course
@@ -255,13 +257,13 @@ def step_existing_content_selection():
             st.session_state.form_data = get_default_form_data()
             st.session_state.current_step = 0
             st.rerun()
-
+        
     with col2:
         if st.button("Continue →", type="primary"):
             if not st.session_state.selected_module:
                 st.error("Please select a module to continue.")
                 return
-
+            
             course_name_clean = st.session_state.selected_course.lower().replace(' ', '_')
             module_name_clean = st.session_state.selected_module.lower().replace(' ', '_')
             config_path = os.path.join(
@@ -297,11 +299,18 @@ def step_project_setup():
             placeholder="Enter the course or program name, e.g., Introduction to Data Analysis, Strategic Leadership"
         )
         
-        student_description = st.text_area(
-            "Who are the learners for this course?",
-            value=st.session_state.form_data["audience"].get("student_description", ""),
+        professional_domain = st.text_input(
+            "What is the learner's professional domain?",
+            value=st.session_state.form_data["audience"].get("professional_domain", ""),
             help="This helps shape the tone and professional context of the scenario.",
-            placeholder="Describe your learners, e.g., university students, early-career professionals",
+            placeholder="e.g., Marketing professionals, Social media managers, Data analysts"
+        )
+        
+        course_description = st.text_area(
+            "What is a high-level course description?",
+            value=st.session_state.form_data["course"].get("course_description", ""),
+            help="Provide context about what the course covers overall.",
+            placeholder="e.g., This course teaches students how to use AI tools for content moderation...",
             height=100
         )
         
@@ -331,9 +340,10 @@ def step_project_setup():
         submitted = st.form_submit_button("Continue to Review →", type="primary")
         
         if submitted:
-            if all([course_title, module_title, key_concept, existing_challenge, student_description]):
+            if all([course_title, professional_domain, course_description, module_title, key_concept, existing_challenge]):
                 st.session_state.form_data["course"] = {
                     "course_title": course_title,
+                    "course_description": course_description,
                     "course_objectives": st.session_state.form_data["course"].get("course_objectives", "")
                 }
                 st.session_state.form_data["project"] = {
@@ -344,7 +354,7 @@ def step_project_setup():
                     "project_learning_objectives": st.session_state.form_data["project"].get("project_learning_objectives", "")
                 }
                 st.session_state.form_data["audience"] = {
-                    "student_description": student_description,
+                    "professional_domain": professional_domain,
                     "education_level": st.session_state.form_data["audience"].get("education_level", "undergrad_intro"),
                     "prerequisites": st.session_state.form_data["audience"].get("prerequisites", ""),
                     "class_size": st.session_state.form_data["audience"].get("class_size", 25)
@@ -378,8 +388,11 @@ def step_review_export():
     
     st.subheader("👥 Audience")
     audience_data = st.session_state.form_data["audience"]
-    st.markdown(f"**Learner Description:** {audience_data.get('student_description', 'Not provided')}")
-
+    st.markdown(f"**Professional Domain:** {audience_data.get('professional_domain', 'Not provided')}")
+    
+    st.subheader("📝 Course Description")
+    st.markdown(f"**Description:** {course_data.get('course_description', 'Not provided')}")
+    
     
     # Save and continue options
     st.subheader("💾 Save Configuration")
@@ -506,15 +519,64 @@ def step_scenario_generation():
         if st.button("✨ Update with AI", type="secondary"):
             if update_instructions:
                 with st.spinner("🤖 Updating scenario with AI..."):
-                    try:
+                    try:  
+                        course_title = st.session_state.form_data["course"].get("course_title", "")
+                        course_description = st.session_state.form_data["course"].get("course_description", "")
+                        professional_domain = st.session_state.form_data["audience"].get("professional_domain", "")
+                        module_title = st.session_state.form_data["project"].get("module_title", "")
+                        key_concept = st.session_state.form_data["project"].get("key_concept", "")
+                        existing_challenge = st.session_state.form_data["project"].get("existing_challenge", "")
+                        additional_info = st.session_state.form_data.get("additional_info", "")
+                        prompt = f"""
+You are an expert instructional designer and learning experience designer who creates short, realistic, and motivating learning scenarios for higher education and professional audiences. Each scenario should connect the key concept to real-world practice, reflect the learners' context, and feel authentic to their field.
+
+Based on the following inputs, update the current scenario according to the update instructions:
+Current scenario: {edited_scenario}
+Update instructions: {update_instructions}
+
+Inputs:
+- Course: {course_title}
+- Course Description: {course_description}
+- Professional Domain: {professional_domain}
+- Module Description: {module_title}
+- Key Concept or Learning Objective: {key_concept}
+- Learners' Existing Knowledge: {existing_challenge}
+- Additional Information: {additional_info}
+
+Scenarios should
+1. Be **realistic and relevant** to the learner profile and course context.
+2. Clearly illustrate **how the key concept or skill applies in practice**.
+3. Present a situation or challenge that encourages **critical thinking or decision-making**.
+4. Use **authentic, inclusive examples** (diverse names, roles, and settings).
+5. Specify a **clear setting or context** (e.g., workplace, community, field site, research team, or organizational meeting).
+6. Feel **motivating and purposeful** — learners should understand why the skill or concept matters.
+7. Be 2-3 sentences long. Do not add any other text or formatting.
+
+**IMPORTANT: Each scenario must:**
+- Write in plain, professional language suitable for higher education or adult learners.
+- Keep tone **practical, motivational, and grounded in real-world settings**.
+- Avoid jargon or overly academic phrasing.
+- Focus on what’s happening and why it matters — not on lengthy backstories or character details.
+
+Example response:
+Course: Social Media Platforms
+Learner Profile: Social Media Managers
+Module Description: Content Moderation
+Key Concept or Learning Objective: Understanding LLMs in content moderation
+Learners’ Existing Knowledge: Basic understanding of content moderation
+Additional Information: LLMs are becoming increasingly important in content moderation.
+
+A suitable scenario summary could be:
+safeChats is a fast-growing social media platform with active users worldwide. Their Trust and Safety team needs help strengthening content moderation systems and reducing costs. Currently, they use traditional sentiment analysis that flags posts as hate speech or not, but provides no explanations. Users complain about unfair flagging, and human reviewers spend extra time interpreting decisions. Their system also performs poorly in other languages. They're exploring Generative AI and LLMs because these can understand context, sarcasm, and nuance in multiple languages, explain reasoning in natural language, suggest better moderation responses, and continuously improve through feedback loops.
+"""
                         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
                         response = client.chat.completions.create(
-                            model="gpt-4-1106-preview",
+                            model="gpt-4-1106-preview",  # GPT-4.1 model
                             messages=[
-                                {"role": "system", "content": "You are an expert educational scenario designer. Update the given scenario based on the user's instructions while maintaining its core educational value."},
-                                {"role": "user", "content": f"Current scenario: {edited_scenario}\n\nUpdate instructions: {update_instructions}\n\nProvide only the updated scenario text, no explanations."}
+                                {"role": "system", "content": "You are a helpful assistant that follows the provided task instructions carefully."},
+                                {"role": "user", "content": prompt},
                             ],
-                            max_tokens=500,
+                            max_tokens=800,
                             temperature=0.7
                         )
                         updated_scenario = response.choices[0].message.content.strip()
@@ -592,7 +654,7 @@ def step_scenario_metadata():
     
     # Get final scenario
     final_scenario = st.session_state.scenario_data.get("final_scenario", "")
-    
+
     # Generate metadata when flag is True
     if st.session_state.metadata_need_generation:
         with st.spinner("🤖 Generating scenario metadata with AI..."):
@@ -608,17 +670,16 @@ Module: {st.session_state.form_data["project"].get("module_title", "")}
 
 Generate:
 1. Number of screens (typically 3-7)
-2. Style pack (palette, vibe, aspect ratio)
-3. Overall tone (e.g., professional, casual, technical)
-4. List of 2-4 actors with: name, role, background, communication style
+2. Aspect ratio
+3. Main character (name, role, purpose in scenario)
+4. Side character (name, role, purpose in scenario) - They could be a supporting character that helps the main character achieve their goal. Only include if needed.
 
 Format as JSON:
 {{
   "num_screens": <number>,
-  "style_pack": {{"palette": "", "vibe": "", "aspect_ratio": ""}},
-  "overall_tone": "",
+  "aspect_ratio": "",
   "actors": [
-    {{"name": "", "role": "", "background": "", "communication_style": ""}}
+    {{"name": "", "role": "", "purpose": ""}}
   ]
 }}"""
                 
@@ -645,7 +706,32 @@ Format as JSON:
                 st.error(f"❌ Error generating metadata: {str(e)}")
                 return
     
+    # Display and edit actors
+    st.subheader("🎭 Actors")
+    
+    actors = st.session_state.metadata_data.get("actors", [])
+    if not actors:
+        actors = [{"name": "", "role": "", "purpose": ""}]
+    
+    edited_actors = []
+    for i, actor in enumerate(actors):
+        with st.expander(f"Actor {i+1}: {actor.get('name', 'New Actor')}", expanded=True):
+            name = st.text_input(f"Name", value=actor.get("name", ""), key=f"actor_{i}_name")
+            role = st.text_input(f"Role", value=actor.get("role", ""), key=f"actor_{i}_role")
+            purpose = st.text_area(f"Purpose in Scenario", value=actor.get("purpose", ""), key=f"actor_{i}_purpose", height=80)
+            edited_actors.append({
+                "name": name,
+                "role": role,
+                "purpose": purpose
+            })
+    
+    if st.button("➕ Add Actor"):
+        actors.append({"name": "", "role": "", "purpose": ""})
+        st.session_state.metadata_data["actors"] = actors
+        st.rerun()
+    
     # Display and edit metadata
+    st.markdown("---")
     st.subheader("📊 Scenario Metadata")
     
     num_screens = st.number_input(
@@ -656,57 +742,17 @@ Format as JSON:
         key="edit_num_screens"
     )
     
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        palette = st.text_input(
-            "Color Palette",
-            value=st.session_state.metadata_data.get("style_pack", {}).get("palette", ""),
-            key="edit_palette"
-        )
-    with col2:
-        vibe = st.text_input(
-            "Visual Vibe",
-            value=st.session_state.metadata_data.get("style_pack", {}).get("vibe", ""),
-            key="edit_vibe"
-        )
-    with col3:
-        aspect_ratio = st.text_input(
-            "Aspect Ratio",
-            value=st.session_state.metadata_data.get("style_pack", {}).get("aspect_ratio", "16:9"),
-            key="edit_aspect_ratio"
-        )
-    
-    overall_tone = st.text_input(
-        "Overall Tone",
-        value=st.session_state.metadata_data.get("overall_tone", ""),
-        key="edit_tone"
+    aspect_ratio = st.text_input(
+        "Aspect Ratio",
+        value=st.session_state.metadata_data.get("aspect_ratio", "16:9"),
+        key="edit_aspect_ratio"
     )
     
-    # Display and edit actors
-    st.subheader("🎭 Actors")
-    
-    actors = st.session_state.metadata_data.get("actors", [])
-    if not actors:
-        actors = [{"name": "", "role": "", "background": "", "communication_style": ""}]
-    
-    edited_actors = []
-    for i, actor in enumerate(actors):
-        with st.expander(f"Actor {i+1}: {actor.get('name', 'New Actor')}", expanded=True):
-            name = st.text_input(f"Name", value=actor.get("name", ""), key=f"actor_{i}_name")
-            role = st.text_input(f"Role", value=actor.get("role", ""), key=f"actor_{i}_role")
-            background = st.text_area(f"Background", value=actor.get("background", ""), key=f"actor_{i}_background", height=80)
-            comm_style = st.text_input(f"Communication Style", value=actor.get("communication_style", ""), key=f"actor_{i}_comm")
-            edited_actors.append({
-                "name": name,
-                "role": role,
-                "background": background,
-                "communication_style": comm_style
-            })
-    
-    if st.button("➕ Add Actor"):
-        actors.append({"name": "", "role": "", "background": "", "communication_style": ""})
-        st.session_state.metadata_data["actors"] = actors
-        st.rerun()
+    visual_style = st.text_input(
+        "Visual Style",
+        value="Low-poly graphics, vector graphics, flat color palette, minimalist, simple vector style",
+        key="edit_visual_style"
+    )
     
     # Navigation
     st.markdown("---")
@@ -718,13 +764,13 @@ Format as JSON:
             st.rerun()
     
     with col2:
-        if st.button("💾 Save Metadata", type="primary"):
+        if st.button("💾 Save & Continue", type="primary"):
             try:
                 # Update metadata
                 st.session_state.metadata_data.update({
                     "num_screens": num_screens,
-                    "style_pack": {"palette": palette, "vibe": vibe, "aspect_ratio": aspect_ratio},
-                    "overall_tone": overall_tone,
+                    "aspect_ratio": aspect_ratio,
+                    "visual_style": visual_style,
                     "actors": edited_actors
                 })
                 
@@ -739,10 +785,142 @@ Format as JSON:
                     json.dump(st.session_state.metadata_data, f, indent=2)
                 
                 st.success("✅ Metadata saved successfully!")
+                st.session_state.current_step = 5
+                st.session_state.screens_need_generation = True
+                st.rerun()
             except Exception as e:
                 st.error(f"❌ Error saving metadata: {str(e)}")
     
     with col3:
         if st.button("🔄 Regenerate", type="secondary"):
             st.session_state.metadata_need_generation = True
+            st.rerun()
+
+
+def step_screen_generation():
+    """Step 5: Generate Screens with Image Descriptions and Captions"""
+    st.markdown('<div class="step-header">🖼️ Screen Generation</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-description">Generate screens with image descriptions and captions for your scenario.</div>', unsafe_allow_html=True)
+    
+    # Initialize screen generation flag
+    if "screens_need_generation" not in st.session_state:
+        st.session_state.screens_need_generation = True
+    
+    # Initialize screen data if not exists
+    if "screen_data" not in st.session_state or not st.session_state.screen_data:
+        st.session_state.screen_data = {}
+    
+    # Get necessary data
+    final_scenario = st.session_state.scenario_data.get("final_scenario", "")
+    num_screens = st.session_state.metadata_data.get("num_screens", 5)
+    actors = st.session_state.metadata_data.get("actors", [])
+    
+    # Generate screens when flag is True
+    if st.session_state.screens_need_generation:
+        with st.spinner("🤖 Generating screens with AI..."):
+            try:
+                client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                
+                actors_str = "\n".join([f"- {a['name']} ({a['role']}): {a['purpose']}" for a in actors])
+                
+                prompt = f"""
+You are an expert instructional designer and learning experience designer who creates short, realistic, and motivating learning scenarios for higher education and professional audiences. Each scenario should connect the key concept to real-world practice, reflect the learners' context, and feel authentic to their field.                
+
+**Goal:** Create {num_screens} sequential screens that visually tell the story described below.  
+Each screen must feel like a scene in a short film, with a coherent flow and emotional build-up that draws the viewer in.
+
+**Scenario:**  
+{final_scenario}
+
+**Actors:**  
+{actors_str}
+
+**Course:** {st.session_state.form_data["course"].get("course_title", "")}  
+**Module:** {st.session_state.form_data["project"].get("module_title", "")}
+
+**Guidelines:**
+1. Each screen should advance the story in a logical and emotionally engaging way.
+2. Write **image_description** as if it will be sent directly to an image generation model. Use vivid visual language that describes:
+   - The setting, mood, and lighting
+   - Character expressions, gestures, and positions
+   - Relevant props, backgrounds, and atmosphere
+   - Style cues aligned with the module’s visual style (e.g., low-poly, vector, flat color palette)
+3. Write **caption** as a short, motivational or descriptive text that connects the visual to the scenario.  
+   - Keep captions natural, concise, and meaningful.
+   - They should help the learner or viewer follow the story.
+
+**Storytelling Best Practices:**
+- Maintain tone consistency across all screens (same mood, pacing, and style).
+- End with insight or resolution that motivates the next phase of the project.
+
+Format as JSON:
+{{
+  "screens": [
+    {{"screen_number": 1, "image_description": "", "caption": ""}},
+    {{"screen_number": 2, "image_description": "", "caption": ""}}
+  ]
+}}"""
+                
+                response = client.chat.completions.create(
+                    model="gpt-4-1106-preview",
+                    messages=[
+                        {"role": "system", "content": "You are an expert instructional designer and learning experience designer who creates short, realistic, and motivating learning scenarios for higher education and professional audiences. Each scenario should connect the key concept to real-world practice, reflect the learners' context, and feel authentic to their field. Generate screen content in valid JSON format."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=2000,
+                    temperature=0.7
+                )
+                
+                import re
+                content = response.choices[0].message.content
+                json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                if json_match:
+                    screen_data = json.loads(json_match.group())
+                    st.session_state.screen_data = screen_data
+                    st.session_state.screens_need_generation = False
+                else:
+                    st.error("Failed to parse screen data")
+            except Exception as e:
+                st.error(f"❌ Error generating screens: {str(e)}")
+                return
+    
+    # Display and edit screens
+    screens = st.session_state.screen_data.get("screens", [])
+    
+    for i, screen in enumerate(screens):
+        with st.expander(f"Screen {i+1}", expanded=False):
+            image_desc = st.text_area(f"Image Description", value=screen.get("image_description", ""), key=f"screen_{i}_img", height=100)
+            caption = st.text_area(f"Caption", value=screen.get("caption", ""), key=f"screen_{i}_caption", height=80)
+            screens[i]["image_description"] = image_desc
+            screens[i]["caption"] = caption
+    
+    # Navigation
+    st.markdown("---")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("← Back to Metadata", type="secondary"):
+            st.session_state.current_step = 4
+            st.rerun()
+    
+    with col2:
+        if st.button("💾 Save Screens", type="primary"):
+            try:
+                # Save to file
+                course_title = st.session_state.form_data["course"].get("course_title", "")
+                module_title = st.session_state.form_data["project"].get("module_title", "")
+                course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+                os.makedirs(os.path.dirname(screens_filepath), exist_ok=True)
+                with open(screens_filepath, 'w') as f:
+                    json.dump(st.session_state.screen_data, f, indent=2)
+                
+                st.success("✅ Screens saved successfully!")
+            except Exception as e:
+                st.error(f"❌ Error saving screens: {str(e)}")
+    
+    with col3:
+        if st.button("🔄 Regenerate", type="secondary"):
+            st.session_state.screens_need_generation = True
             st.rerun()

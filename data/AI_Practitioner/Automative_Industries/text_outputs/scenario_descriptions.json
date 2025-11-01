@@ -1,0 +1,3 @@
+{
+  "scenario_description": "At RoboTech Automotives, engineers are developing an AI-powered diagnostic tool for identifying and predicting maintenance issues in commercial vehicles. Maria, a robotics engineer, is integrating machine learning algorithms to analyze real-time sensor data from a fleet of trucks. The challenge is to create a system that not only detects current mechanical problems but also predicts potential future failures, thus minimizing downtime and reducing maintenance costs. Maria must decide which machine learning techniques will provide the most accurate predictions while remaining computationally efficient for on-board processing."
+}

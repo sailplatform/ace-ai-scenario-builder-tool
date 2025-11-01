@@ -1,0 +1,20 @@
+{
+  "course": {
+    "course_title": "AI User",
+    "course_objectives": ""
+  },
+  "project": {
+    "module_title": "Computer Vision",
+    "module_description": "",
+    "key_concept": "Explain the significance and potential impact of computer vision applications in real-world AI applications.",
+    "existing_challenge": "Students must be familiar with using computers (laptop/desktop) connected to the  Internet. Students must be able to engage with interactive software running in an Internet browser.",
+    "project_learning_objectives": ""
+  },
+  "audience": {
+    "student_description": "Our students are navy robotics technicians.",
+    "education_level": "undergrad_intro",
+    "prerequisites": "",
+    "class_size": 25
+  },
+  "additional_info": ""
+}

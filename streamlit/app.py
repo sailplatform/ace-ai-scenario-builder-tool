@@ -7,7 +7,8 @@ from steps import (
     step_project_setup,
     step_review_export,
     step_scenario_generation,
-    step_scenario_metadata
+    step_scenario_metadata,
+    step_screen_generation
 )
 
 # Page configuration
@@ -45,6 +46,8 @@ def main():
         step_scenario_generation()
     elif st.session_state.current_step == 4:
         step_scenario_metadata()
+    elif st.session_state.current_step == 5:
+        step_screen_generation()
 
 if __name__ == "__main__":
     main()

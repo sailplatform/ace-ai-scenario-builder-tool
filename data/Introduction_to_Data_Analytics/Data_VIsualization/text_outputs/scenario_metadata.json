@@ -1,0 +1,12 @@
+{
+  "num_screens": 6,
+  "aspect_ratio": "16:9",
+  "actors": [
+    {
+      "name": "Maya",
+      "role": "Marketing Analyst",
+      "purpose": "Maya is the main character tasked with analyzing social media feedback to inform her company's marketing strategy for their eco-friendly clothing line. She uses data visualization tools to interpret the sentiment and patterns in the data."
+    }
+  ],
+  "visual_style": "Low-poly graphics, vector graphics, flat color palette, minimalist, simple vector style"
+}
