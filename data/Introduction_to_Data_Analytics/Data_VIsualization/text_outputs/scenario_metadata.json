@@ -1,11 +1,12 @@
 {
-  "num_screens": 6,
+  "num_screens": 5,
   "aspect_ratio": "16:9",
   "actors": [
     {
-      "name": "Maya",
-      "role": "Marketing Analyst",
-      "purpose": "Maya is the main character tasked with analyzing social media feedback to inform her company's marketing strategy for their eco-friendly clothing line. She uses data visualization tools to interpret the sentiment and patterns in the data."
+      "name": "Jackson",
+      "role": "Social Media Analyst",
+      "purpose": "Jackson is trying to uncover emerging trends from social media data related to luxury travel. His objective is to analyze sentiment over time using PyTorch and visualize the data to identify triggers of positive and negative sentiments. This analysis will assist his agency's clients in customizing their offerings and marketing strategies to align with the preferences of high-end travelers.",
+      "appearance": "A mid-30s, East Asian male with a modern hairstyle, wearing smart casual attire such as a button-up shirt and glasses, indicating his analytical role."
     }
   ],
   "visual_style": "Low-poly graphics, vector graphics, flat color palette, minimalist, simple vector style"

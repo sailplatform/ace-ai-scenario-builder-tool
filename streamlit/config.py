@@ -40,7 +40,7 @@ def get_page_config():
     """Return Streamlit page configuration"""
     return {
         "page_title": "AI Scenario Builder Tool",
-        "page_icon": "🎯",
+        "page_icon": None,
         "layout": "wide",
         "initial_sidebar_state": "expanded"
     }

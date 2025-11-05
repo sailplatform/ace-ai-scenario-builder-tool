@@ -1,0 +1,17 @@
+{
+  "num_screens": 5,
+  "aspect_ratio": "16:9",
+  "actors": [
+    {
+      "name": "Carlos Gomez",
+      "role": "Operations Manager",
+      "purpose": "He is the protagonist who is looking to improve efficiency and reduce errors in inventory management by implementing a computer vision system."
+    },
+    {
+      "name": "Sophia Liu",
+      "role": "IT Specialist",
+      "purpose": "She is a side character who assists Carlos in understanding the technical requirements and integrations for the computer vision system with the existing inventory database."
+    }
+  ],
+  "visual_style": "Low-poly graphics, vector graphics, flat color palette, minimalist, simple vector style"
+}

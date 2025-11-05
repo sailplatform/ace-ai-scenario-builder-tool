@@ -57,7 +57,8 @@ def display_progress():
             "Review & Save",
             "Scenario Generation",
             "Metadata & Actors",
-            "Screen Generation"
+            "Screen Generation",
+            "Image Generation"
         ]
         
         progress = (st.session_state.current_step - 1) / len(steps)
@@ -70,7 +71,7 @@ def display_progress():
 
 def display_header():
     """Display the main header and welcome message"""
-    st.markdown('<div class="main-header">🎯 AI Scenario Builder Tool</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">AI Scenario Builder Tool</div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="info-box">
     <strong>Welcome!</strong> This tool will guide you through creating a comprehensive project configuration 
@@ -88,7 +89,7 @@ def display_optional_details_modal():
     
     # Create a button in the sidebar or at the top
     with st.sidebar:
-        st.markdown("### 📝 Project Information")
+        st.markdown("### Project Information")
         
         # Fixed course and module titles at the top
         course_title_display = st.session_state.form_data["course"].get("course_title", "Not Set")
@@ -98,7 +99,7 @@ def display_optional_details_modal():
         st.info(f"**Module:** {module_title_display}")
         
         # Required Information Section
-        with st.expander("✏️ Required Information", expanded=False):
+        with st.expander("Required Information", expanded=False):
             # course_title = st.text_input(
             #     "What course or program is the scenario generation for?",
             #     value=st.session_state.form_data["course"].get("course_title", ""),
@@ -151,7 +152,7 @@ def display_optional_details_modal():
             )
         
         # Optional Details Section
-        # with st.expander("📋 Additional Information", expanded=False):
+        # with st.expander("Additional Information", expanded=False):
             # course_objectives = st.text_area(
             #     "Course Learning Objectives",
             #     value=st.session_state.form_data["course"].get("course_objectives", ""),
@@ -215,9 +216,9 @@ def display_optional_details_modal():
         )
     
         st.markdown("")
-        if st.button("💾 Save All Details", type="primary", use_container_width=True):
+        if st.button("Save All Details", type="primary", use_container_width=True):
             if not course_title or not professional_domain or not course_description or not module_title or not key_concept or not existing_challenge:
-                st.error("❌ All required fields must be filled.")
+                st.error("All required fields must be filled.")
             else:
                 st.session_state.form_data["course"]["course_title"] = course_title
                 st.session_state.form_data["course"]["course_description"] = course_description
@@ -231,15 +232,15 @@ def display_optional_details_modal():
                 try:
                     from utils import save_to_json
                     filepath = save_to_json()
-                    st.success(f"✅ Details saved to {filepath}!")
+                    st.success(f"Details saved to {filepath}!")
                     st.rerun()
                 except Exception as e:
-                    st.error(f"❌ Error saving details: {str(e)}")
+                    st.error(f"Error saving details: {str(e)}")
 
         # Show final scenario for step 4+
         if st.session_state.current_step >= 4:
             st.markdown("---")
-            st.subheader("📝 Final Scenario")
+            st.subheader("Final Scenario")
             final_scenario = st.session_state.get("scenario_data", {}).get("final_scenario", "")
             
             updated_scenario = st.text_area(
@@ -249,7 +250,7 @@ def display_optional_details_modal():
                 key="sidebar_scenario_edit"
             )
             
-            if st.button("💾 Update Scenario", use_container_width=True):
+            if st.button("Update Scenario", use_container_width=True):
                 try:
                     st.session_state.scenario_data["final_scenario"] = updated_scenario
                     
@@ -266,18 +267,18 @@ def display_optional_details_modal():
                     with open(desc_filepath, 'w') as f:
                         json.dump({"scenario_description": updated_scenario}, f, indent=2)
                     
-                    st.success("✅ Scenario updated!")
+                    st.success("Scenario updated!")
                     st.rerun()
                 except Exception as e:
-                    st.error(f"❌ Error: {str(e)}")
+                    st.error(f"Error: {str(e)}")
             
             
             
             # Show metadata and actors for step 5+
             if st.session_state.current_step >= 5:
                 st.markdown("---")
-                st.subheader("🎬 Metadata & Actors")
-                with st.expander("🎬 Metadata & Actors"):
+                st.subheader("Metadata & Actors")
+                with st.expander("Metadata & Actors"):
                     metadata = st.session_state.get("metadata_data", {})
                     print(metadata)
                     if metadata:
@@ -305,16 +306,23 @@ def display_optional_details_modal():
                                 key=f"sidebar_actor_{i}_purpose",
                                 height=80
                             )
+                            st.text_area(
+                                "Appearance",
+                                value=actor.get("appearance", ""),
+                                key=f"sidebar_actor_{i}_appearance",
+                                height=80
+                            )
                             st.markdown("---")
 
-                        if st.button("💾 Update Metadata & Actors", use_container_width=True):
+                        if st.button("Update Metadata & Actors", use_container_width=True):
                             try:
                                 actors_data = []
                                 for i in range(len(actors)):
                                     actors_data.append({
                                         "name": st.session_state[f"sidebar_actor_{i}_name"],
                                         "role": st.session_state[f"sidebar_actor_{i}_role"],
-                                        "purpose": st.session_state[f"sidebar_actor_{i}_purpose"]
+                                        "purpose": st.session_state[f"sidebar_actor_{i}_purpose"],
+                                        "appearance": st.session_state.get(f"sidebar_actor_{i}_appearance", "")
                                     })
                                 st.session_state.metadata_data.update({
                                     "num_screens": num_screens,
@@ -334,10 +342,37 @@ def display_optional_details_modal():
                                 with open(metadata_filepath, 'w') as f:
                                     json.dump(st.session_state.metadata_data, f, indent=2)
                                 
-                                st.success("✅ Updated!")
+                                st.success("Updated!")
                                 st.rerun()
                             except Exception as e:
-                                st.error(f"❌ Error: {str(e)}")
+                                st.error(f"Error: {str(e)}")
             
+            # Show screens for step 6+
+            if st.session_state.current_step >= 6:
                 st.markdown("---")
+                st.subheader("Screens")
+                with st.expander("Screens", expanded=False):
+                    screens = st.session_state.get("screen_data", {}).get("screens", [])
+                    if screens:
+                        for i, screen in enumerate(screens):
+                            st.markdown(f"**Screen {i+1}**")
+                            caption = st.text_area(f"Caption", value=screen.get("caption", ""), key=f"sidebar_screen_{i}_caption", height=68, label_visibility="collapsed")
+                            img_desc = st.text_area(f"Image Desc", value=screen.get("image_description", ""), key=f"sidebar_screen_{i}_img", height=80, label_visibility="collapsed")
+                            
+                            if st.button(f"Update Screen {i+1}", key=f"update_screen_{i}", use_container_width=True):
+                                screens[i]["caption"] = caption
+                                screens[i]["image_description"] = img_desc
+                                course_title = st.session_state.form_data["course"].get("course_title", "")
+                                module_title = st.session_state.form_data["project"].get("module_title", "")
+                                course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                                module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                                screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+                                import os
+                                os.makedirs(os.path.dirname(screens_filepath), exist_ok=True)
+                                import json
+                                with open(screens_filepath, 'w') as f:
+                                    json.dump({"screens": screens}, f, indent=2)
+                                st.session_state.screen_data = {"screens": screens}
+                                st.rerun()
+                            st.markdown("---")
         

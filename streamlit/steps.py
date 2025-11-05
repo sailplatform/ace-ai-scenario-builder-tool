@@ -141,7 +141,7 @@ safeChats is a fast-growing social media platform with active users worldwide. T
 
 def step_initial_selection():
     """Step 0: Initial Selection - Choose workflow mode"""
-    st.markdown('<div class="step-header">🚀 Welcome to AI Scenario Builder</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Welcome to AI Scenario Builder</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Choose how you\'d like to start your project.</div>', unsafe_allow_html=True)
     
     # Reset form data when returning to initial selection
@@ -154,7 +154,7 @@ def step_initial_selection():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("🆕 Create New Project")
+        st.subheader("Create New Project")
         st.markdown("Start from scratch with a new course and module.")
         
         if st.button("Create New Project", type="primary", use_container_width=True):
@@ -164,7 +164,7 @@ def step_initial_selection():
             st.rerun()
     
     with col2:
-        st.subheader("📚 Use Existing Content")
+        st.subheader(" Use Existing Content")
         if existing_courses:
             st.markdown("Build upon existing courses and modules.")
             
@@ -185,7 +185,7 @@ def step_initial_selection():
         
         for course in existing_courses:
             modules = get_existing_modules(course)
-            with st.expander(f"📚 {course} ({len(modules)} modules)"):
+            with st.expander(f" {course} ({len(modules)} modules)"):
                 if modules:
                     st.markdown("**Existing modules:**")
                     for module in modules:
@@ -196,7 +196,7 @@ def step_initial_selection():
 
 def step_existing_content_selection():
     """Step 0.5: Select existing course and module"""
-    st.markdown('<div class="step-header">📚 Select Existing Content</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Select Existing Content</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Choose an existing course and module to build upon. After loading, you\'ll proceed directly to scenario generation.</div>', unsafe_allow_html=True)
     
     existing_courses = get_existing_courses()
@@ -276,18 +276,18 @@ def step_existing_content_selection():
                         existing_data = json.load(f)
                     st.session_state.form_data = existing_data
                     st.session_state.workflow_mode = "existing_module"
-                    st.info("✅ Configuration loaded! Proceeding to scenario generation...")
+                    st.info(" Configuration loaded! Proceeding to scenario generation...")
                     st.session_state.current_step = 3
                     st.session_state.scenarios_need_generation = True
                     st.rerun()
                 except Exception as e:
-                    st.error(f"❌ Could not load existing configuration: {str(e)}")
+                    st.error(f" Could not load existing configuration: {str(e)}")
             else:
-                st.error("❌ No existing configuration found for this module. Please create a new project instead.")
+                st.error(" No existing configuration found for this module. Please create a new project instead.")
 
 def step_project_setup():
     """Step 1: Combined Project Setup - All required information in one place"""
-    st.markdown('<div class="step-header">🚀 Project Setup</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Project Setup</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="step-description">Let\'s set up your project with the essential information.</div>', unsafe_allow_html=True)
     
@@ -366,17 +366,17 @@ def step_project_setup():
 
 def step_review_export():
     """Step 2: Review and Save Configuration"""
-    st.markdown('<div class="step-header">📋 Review & Save Configuration</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Review & Save Configuration</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Review your information and save the configuration. Next, you\'ll generate AI-powered scenario descriptions for your project.</div>', unsafe_allow_html=True)
     
     # Display all collected information
-    st.subheader("📚 Course Information")
+    st.subheader(" Course Information")
     course_data = st.session_state.form_data["course"]
     st.markdown(f"**Course/Program:** {course_data.get('course_title', 'Not provided')}")
     if course_data.get('course_objectives'):
         st.markdown(f"**Course Objectives:** {course_data.get('course_objectives', 'Not provided')}")
     
-    st.subheader("🎯 Module & Learning Information")
+    st.subheader(" Module & Learning Information")
     project_data = st.session_state.form_data["project"]
     st.markdown(f"**Module/Topic:** {project_data.get('module_title', 'Not provided')}")
     if project_data.get('module_description'):
@@ -386,16 +386,16 @@ def step_review_export():
     if project_data.get('project_learning_objectives'):
         st.markdown(f"**Learning Objectives:** {project_data.get('project_learning_objectives', 'Not provided')}")
     
-    st.subheader("👥 Audience")
+    st.subheader("Audience")
     audience_data = st.session_state.form_data["audience"]
     st.markdown(f"**Professional Domain:** {audience_data.get('professional_domain', 'Not provided')}")
     
-    st.subheader("📝 Course Description")
+    st.subheader(" Course Description")
     st.markdown(f"**Description:** {course_data.get('course_description', 'Not provided')}")
     
     
     # Save and continue options
-    st.subheader("💾 Save Configuration")
+    st.subheader(" Save Configuration")
     
     col1, col2, col3 = st.columns(3)
     
@@ -405,10 +405,10 @@ def step_review_export():
             st.rerun()
     
     with col2:
-        if st.button("💾 Save & Generate Scenarios", type="primary"):
+        if st.button(" Save & Generate Scenarios", type="primary"):
             try:
                 filepath = save_to_json()
-                st.success(f"✅ Configuration saved successfully!")
+                st.success(f" Configuration saved successfully!")
                 st.info(f"📁 Saved to: `{filepath}`")
                 
                 # Move directly to scenario generation
@@ -416,10 +416,10 @@ def step_review_export():
                 st.session_state.scenarios_need_generation = True
                 st.rerun()
             except Exception as e:
-                st.error(f"❌ Error saving configuration: {str(e)}")
+                st.error(f" Error saving configuration: {str(e)}")
     
     with col3:
-        if st.button("🔄 Start Over", type="secondary"):
+        if st.button(" Start Over", type="secondary"):
             st.session_state.current_step = 0
             st.session_state.workflow_mode = None
             st.session_state.form_data = get_default_form_data()
@@ -431,12 +431,30 @@ def step_review_export():
 
 def step_scenario_generation():
     """Step 3: Generate Scenario Description and Image Vibe"""
-    st.markdown('<div class="step-header">📝 Scenario Generation</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Scenario Generation</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Generate three scenario options using AI and select the best one for your project.</div>', unsafe_allow_html=True)
     
     # Check if scenario data already exists
     scenario_filepath = get_scenario_filepath(st.session_state.form_data)
     existing_scenario_data = load_scenario_data(scenario_filepath)
+    
+    # Check for existing scenario and offer to use it
+    if existing_scenario_data and existing_scenario_data.get("final_scenario") and "scenarios_need_generation" not in st.session_state:
+        st.info(" An existing scenario was found. Would you like to use it?")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Use Existing Scenario", type="primary"):
+                st.session_state.scenario_data = existing_scenario_data
+                st.session_state.scenarios_need_generation = False
+                st.rerun()
+        with col2:
+            if st.button("Generate New Scenario", type="secondary"):
+                st.session_state.scenarios_need_generation = True
+                st.rerun()
+        st.markdown("---")
+        st.subheader("Existing Scenario")
+        st.info(existing_scenario_data.get("final_scenario", ""))
+        return
     
     # Initialize scenario data if not exists
     if not hasattr(st.session_state, 'scenario_data') or not st.session_state.scenario_data:
@@ -455,11 +473,11 @@ def step_scenario_generation():
                 st.session_state.scenario_data["selected_scenario"] = None
                 st.session_state.scenarios_need_generation = False
             except Exception as e:
-                st.error(f"❌ Error generating scenarios: {str(e)}")
+                st.error(f" Error generating scenarios: {str(e)}")
                 return
     
     # Display the three scenario options
-    st.subheader("🎯 Choose Your Scenario")
+    st.subheader(" Choose Your Scenario")
     st.markdown("Select one of the AI-generated scenarios below, or edit it to better fit your needs:")
     
     scenarios = st.session_state.scenario_data.get("generated_scenarios", [])
@@ -492,7 +510,7 @@ def step_scenario_generation():
     # Show selected scenario and allow editing
     if selected_scenario is not None:
         st.markdown("---")
-        st.subheader("✏️ Edit Your Selected Scenario")
+        st.subheader(" Edit Your Selected Scenario")
         
         # Text area for editing the selected scenario
         edited_scenario = st.text_area(
@@ -508,7 +526,7 @@ def step_scenario_generation():
             st.session_state.scenario_data["final_scenario"] = edited_scenario
         
         # LLM-based editing
-        st.markdown("**🤖 Or use AI to refine your scenario:**")
+        st.markdown("**Or use AI to refine your scenario:**")
         update_instructions = st.text_area(
             "Describe how you'd like to modify the scenario:",
             placeholder="e.g., Make it more technical, add more diversity, focus on practical applications",
@@ -516,7 +534,7 @@ def step_scenario_generation():
             key="llm_update_instructions"
         )
         
-        if st.button("✨ Update with AI", type="secondary"):
+        if st.button("✨Update with AI", type="secondary"):
             if update_instructions:
                 with st.spinner("🤖 Updating scenario with AI..."):
                     try:  
@@ -581,15 +599,15 @@ safeChats is a fast-growing social media platform with active users worldwide. T
                         )
                         updated_scenario = response.choices[0].message.content.strip()
                         st.session_state.scenario_data["generated_scenarios"][selected_scenario] = updated_scenario
-                        st.success("✅ Scenario updated with AI!")
+                        st.success(" Scenario updated with AI!")
                         st.rerun()
                     except Exception as e:
-                        st.error(f"❌ Error updating scenario: {str(e)}")
+                        st.error(f" Error updating scenario: {str(e)}")
             else:
                 st.error("Please provide update instructions.")
         
         # Display final scenario
-        st.subheader("📝 Final Scenario")
+        st.subheader(" Final Scenario")
         st.success(edited_scenario)
     
     # Navigation buttons
@@ -602,7 +620,7 @@ safeChats is a fast-growing social media platform with active users worldwide. T
             st.rerun()
     
     with col2:
-        if st.button("💾 Save & Continue", type="primary"):
+        if st.button(" Save & Continue", type="primary"):
             if selected_scenario is not None:
                 try:
                     # Save scenario data
@@ -619,17 +637,17 @@ safeChats is a fast-growing social media platform with active users worldwide. T
                     with open(desc_filepath, 'w') as f:
                         json.dump({"scenario_description": edited_scenario}, f, indent=2)
                     
-                    st.success("✅ Scenario saved successfully!")
+                    st.success(" Scenario saved successfully!")
                     st.session_state.current_step = 4
                     st.session_state.metadata_need_generation = True
                     st.rerun()
                 except Exception as e:
-                    st.error(f"❌ Error saving scenario data: {str(e)}")
+                    st.error(f" Error saving scenario data: {str(e)}")
             else:
                 st.error("Please select a scenario before saving.")
     
     with col3:
-        if st.button("🔄 Generate New Options", type="secondary"):
+        if st.button(" Generate New Options", type="secondary"):
             # Clear existing scenarios and regenerate
             if "scenario_data" in st.session_state:
                 st.session_state.scenario_data.pop("generated_scenarios", None)
@@ -641,7 +659,7 @@ safeChats is a fast-growing social media platform with active users worldwide. T
 
 def step_scenario_metadata():
     """Step 4: Generate Scenario Metadata and Actors"""
-    st.markdown('<div class="step-header">🎬 Scenario Metadata & Actors</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Scenario Metadata & Actors</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Generate metadata and actors for your scenario using AI.</div>', unsafe_allow_html=True)
     
     # Initialize metadata generation flag
@@ -654,34 +672,82 @@ def step_scenario_metadata():
     
     # Get final scenario
     final_scenario = st.session_state.scenario_data.get("final_scenario", "")
+    
+    # Check for existing metadata
+    course_title = st.session_state.form_data["course"].get("course_title", "")
+    module_title = st.session_state.form_data["project"].get("module_title", "")
+    course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+    module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+    metadata_filepath = f"data/{course_name}/{module_name}/text_outputs/scenario_metadata.json"
+    
+    existing_metadata = None
+    if os.path.exists(metadata_filepath):
+        try:
+            with open(metadata_filepath, 'r') as f:
+                existing_metadata = json.load(f)
+        except:
+            pass
+    
+    # Offer to use existing metadata
+    if existing_metadata and existing_metadata.get("actors") and "metadata_need_generation" not in st.session_state:
+        st.info(" Existing metadata and actors were found. Would you like to use them?")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Use Existing Metadata", type="primary"):
+                st.session_state.metadata_data = existing_metadata
+                st.session_state.metadata_need_generation = False
+                st.rerun()
+        with col2:
+            if st.button("Generate New Metadata", type="secondary"):
+                st.session_state.metadata_need_generation = True
+                st.rerun()
+        st.markdown("---")
+        st.subheader("Existing Metadata")
+        st.json(existing_metadata)
+        return
 
     # Generate metadata when flag is True
     if st.session_state.metadata_need_generation:
-        with st.spinner("🤖 Generating scenario metadata with AI..."):
+        with st.spinner("Generating scenario metadata with AI..."):
             try:
                 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
                 
-                prompt = f"""Based on this scenario, generate metadata and actors:
+                prompt = f"""You are an instructional scenario designer. Based on the scenario description, extract key visual and narrative metadata.
 
 Scenario: {final_scenario}
 
 Course: {st.session_state.form_data["course"].get("course_title", "")}
 Module: {st.session_state.form_data["project"].get("module_title", "")}
 
-Generate:
-1. Number of screens (typically 3-7)
-2. Aspect ratio
-3. Main character (name, role, purpose in scenario)
-4. Side character (name, role, purpose in scenario) - They could be a supporting character that helps the main character achieve their goal. Only include if needed.
-
-Format as JSON:
+Your task:
+1. Determine how many visual screens are needed to convey the scenario effectively (usually between 3 and 7).
+2. Recommend the most suitable aspect ratio for these screens (e.g., 16:9, 9:16, 1:1) based on the learning context.
+3. Identify the main character:
+   - Include name, role or title, and a clear explanation of their *objective* and *decision-making context* in the scenario.
+4. Identify any side or supporting characters (only if they contribute meaningfully to the scenario's progression). There should be either 0 or 1 supporting character:
+   - Include name, role or title, and a concise explanation of how they *interact with or influence the main character's goal*.
+5. For each character, provide a brief visual appearance description to ensure visual consistency across images. IMPORTANT: Characters should be diverse in terms of ethnicity, gender, age, and other characteristics. Avoid stereotypes and ensure representation reflects real-world diversity.
+ 
+Output strictly in JSON format:
 {{
-  "num_screens": <number>,
-  "aspect_ratio": "",
+  "num_screens": <integer>,
+  "aspect_ratio": "<string>",
   "actors": [
-    {{"name": "", "role": "", "purpose": ""}}
+    {{
+      "name": "<string>",
+      "role": "<string>",
+      "purpose": "<describe what they are trying to accomplish and how their actions or perspective drive the scenario forward>",
+      "appearance": "<brief visual description including age, ethnicity, gender, and distinctive features. Ensure diversity>"
+    }},
+    {{
+      "name": "<string>",
+      "role": "<string>",
+      "purpose": "<describe how this supporting character enables, challenges, or informs the main character's decisions>",
+      "appearance": "<brief visual description including age, ethnicity, gender, and distinctive features. Ensure diversity>"
+    }}
   ]
 }}"""
+
                 
                 response = client.chat.completions.create(
                     model="gpt-4-1106-preview",
@@ -703,36 +769,54 @@ Format as JSON:
                 else:
                     st.error("Failed to parse metadata")
             except Exception as e:
-                st.error(f"❌ Error generating metadata: {str(e)}")
+                st.error(f" Error generating metadata: {str(e)}")
                 return
     
     # Display and edit actors
-    st.subheader("🎭 Actors")
+    st.subheader("Actors")
     
     actors = st.session_state.metadata_data.get("actors", [])
     if not actors:
-        actors = [{"name": "", "role": "", "purpose": ""}]
+        actors = [{"name": "", "role": "", "purpose": "", "appearance": ""}]
     
     edited_actors = []
+    to_delete = None
+
     for i, actor in enumerate(actors):
         with st.expander(f"Actor {i+1}: {actor.get('name', 'New Actor')}", expanded=True):
-            name = st.text_input(f"Name", value=actor.get("name", ""), key=f"actor_{i}_name")
-            role = st.text_input(f"Role", value=actor.get("role", ""), key=f"actor_{i}_role")
-            purpose = st.text_area(f"Purpose in Scenario", value=actor.get("purpose", ""), key=f"actor_{i}_purpose", height=80)
+            cols = st.columns([10, 1])
+            with cols[0]:
+                name = st.text_input("Name", value=actor.get("name", ""), key=f"actor_{i}_name")
+                role = st.text_input("Role", value=actor.get("role", ""), key=f"actor_{i}_role")
+                purpose = st.text_area("Character's Objective", value=actor.get("purpose", ""), key=f"actor_{i}_purpose", height=80)
+                appearance = st.text_area("Visual Appearance", value=actor.get("appearance", ""), key=f"actor_{i}_appearance", height=80, help="Describe appearance including age, ethnicity, gender, distinctive features. Ensure diversity.")
+            with cols[1]:
+                if st.button("Delete", key=f"delete_actor_{i}"):
+                    to_delete = i
+            
             edited_actors.append({
                 "name": name,
                 "role": role,
-                "purpose": purpose
+                "purpose": purpose,
+                "appearance": appearance
             })
     
-    if st.button("➕ Add Actor"):
-        actors.append({"name": "", "role": "", "purpose": ""})
+    if to_delete is not None:
+        actors.pop(to_delete)
+        st.session_state.metadata_data["actors"] = actors
+        st.rerun()
+
+    if st.button("Add Actor"):
+        actors.append({"name": "", "role": "", "purpose": "", "appearance": ""})
         st.session_state.metadata_data["actors"] = actors
         st.rerun()
     
+    st.session_state.metadata_data["actors"] = edited_actors
+
+    
     # Display and edit metadata
     st.markdown("---")
-    st.subheader("📊 Scenario Metadata")
+    st.subheader("Scenario Metadata")
     
     num_screens = st.number_input(
         "Number of Screens",
@@ -764,7 +848,7 @@ Format as JSON:
             st.rerun()
     
     with col2:
-        if st.button("💾 Save & Continue", type="primary"):
+        if st.button("Save & Continue", type="primary"):
             try:
                 # Update metadata
                 st.session_state.metadata_data.update({
@@ -784,22 +868,22 @@ Format as JSON:
                 with open(metadata_filepath, 'w') as f:
                     json.dump(st.session_state.metadata_data, f, indent=2)
                 
-                st.success("✅ Metadata saved successfully!")
+                st.success("Metadata saved successfully!")
                 st.session_state.current_step = 5
                 st.session_state.screens_need_generation = True
                 st.rerun()
             except Exception as e:
-                st.error(f"❌ Error saving metadata: {str(e)}")
+                st.error(f"Error saving metadata: {str(e)}")
     
     with col3:
-        if st.button("🔄 Regenerate", type="secondary"):
+        if st.button("Regenerate", type="secondary"):
             st.session_state.metadata_need_generation = True
             st.rerun()
 
 
 def step_screen_generation():
     """Step 5: Generate Screens with Image Descriptions and Captions"""
-    st.markdown('<div class="step-header">🖼️ Screen Generation</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Screen Generation</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Generate screens with image descriptions and captions for your scenario.</div>', unsafe_allow_html=True)
     
     # Initialize screen generation flag
@@ -822,12 +906,20 @@ def step_screen_generation():
                 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
                 
                 actors_str = "\n".join([f"- {a['name']} ({a['role']}): {a['purpose']}" for a in actors])
+                key_concept = st.session_state.form_data["project"].get("key_concept", "")
                 
                 prompt = f"""
 You are an expert instructional designer and learning experience designer who creates short, realistic, and motivating learning scenarios for higher education and professional audiences. Each scenario should connect the key concept to real-world practice, reflect the learners' context, and feel authentic to their field.                
 
-**Goal:** Create {num_screens} sequential screens that visually tell the story described below.  
-Each screen must feel like a scene in a short film, with a coherent flow and emotional build-up that draws the viewer in.
+**Goal:** Create {num_screens} sequential screens that visually tell the story described below. The PRIMARY focus should be on clearly depicting and reinforcing the learning objective: {key_concept}. Each screen should directly connect to how this concept is applied, learned, or demonstrated in the scenario.
+
+**Story Arc:**  
+Follow the traditional story structure of:
+1. **Beginning** – Introduce the context, characters, and the inciting incident that sets the story in motion.  
+2. **Rising Action** – Build tension or challenge as the main event or conflict unfolds.  
+3. **Climax** – Present the turning point or key decision moment.  
+4. **Falling Action** – Show the outcome or consequence of that moment.  
+5. **Resolution** – End with an insight, learning, or call to action that ties back to the learning goal.
 
 **Scenario:**  
 {final_scenario}
@@ -839,19 +931,29 @@ Each screen must feel like a scene in a short film, with a coherent flow and emo
 **Module:** {st.session_state.form_data["project"].get("module_title", "")}
 
 **Guidelines:**
-1. Each screen should advance the story in a logical and emotionally engaging way.
-2. Write **image_description** as if it will be sent directly to an image generation model. Use vivid visual language that describes:
-   - The setting, mood, and lighting
-   - Character expressions, gestures, and positions
-   - Relevant props, backgrounds, and atmosphere
-   - Style cues aligned with the module’s visual style (e.g., low-poly, vector, flat color palette)
-3. Write **caption** as a short, motivational or descriptive text that connects the visual to the scenario.  
-   - Keep captions natural, concise, and meaningful.
-   - They should help the learner or viewer follow the story.
+1. Each screen should advance the story in a logical and emotionally engaging way, aligned with the storytelling arc above.  
+2. Write **image_description** as if it will be sent directly to a generative image model. Use vivid, cinematic visual language that describes:
+   - The setting, mood, and lighting  
+   - Character expressions, gestures, and positions  
+   - Relevant props, backgrounds, and atmosphere  
+3. Avoid elements that generative AI renders poorly:
+   - No text, labels, symbols, or charts  
+   - No diagrams, models, mockups, graphs, or technical visualizations
+   - No complex abstractions (e.g., metaphors, irony, conceptual visuals)
+   - Focus ONLY on scenes, people, environments, and objects that can be realistically photographed or illustrated
+   - Instead of mentioning character names, the focus on image generation is more on the character visual.
+4. Write **caption** as a short motivational or descriptive text that connects the visual to the story and learning objective.  
+   - Keep captions natural, concise, and meaningful.  
+
+**Learning Objective Focus:**
+- Each screen should prioritize showing the learning objective in action, not just character interactions.
+- Focus on the conceptual understanding, problem-solving, or skill demonstration related to: {key_concept}
+- Character interactions should serve to illustrate the learning objective, not be the main focus.
 
 **Storytelling Best Practices:**
 - Maintain tone consistency across all screens (same mood, pacing, and style).
-- End with insight or resolution that motivates the next phase of the project.
+- Use human-centered details (body language, environment, emotion) to make the story relatable.  
+- End with insight or resolution that ties directly back to the learning objective.
 
 Format as JSON:
 {{
@@ -859,7 +961,51 @@ Format as JSON:
     {{"screen_number": 1, "image_description": "", "caption": ""}},
     {{"screen_number": 2, "image_description": "", "caption": ""}}
   ]
-}}"""
+}}
+
+Example response:
+Scenario: safeChats is a fast-growing social media platform, having active users everyday around the world and users posts in multiple languages. The Trust and Safety team of safeChats wants to strengthen their content moderation system and reduce moderation costs. Currently, they use traditional sentiment analysis that flags posts as hate speech or not hate speech. Users complain about unfair flagging, and human reviewers spend extra time interpreting decisions. Their system also performs poorly in other languages. They're exploring Generative AI and LLMs because these can understand context, sarcasm, and nuance in multiple languages, explain reasoning in natural language, suggest better moderation responses, and continuously improve through feedback loops.
+Actors: No actors are needed for this scenario.
+
+A suitable response could be:
+"screens": [
+    {{
+      "screen_number": 1,
+      "image_description": "A dynamic split-screen showing a young user sitting at a café posting on safeChats from their phone, with the background illustrating global connectivity through soft glowing world map lines. On the other side, a diverse team of content moderators works in a bright office, reviewing posts on their monitors. The mood is active and global, rendered in a clean flat-vector style with warm blues and yellows.",
+      "caption": "safeChats is a fast-growing social media platform, having active users everyday around the world and users posts in multiple languages. The Trust and Safety team of safeChats wants to strengthen their content moderation system and reduce moderation costs."
+    }},
+    {{
+      "screen_number": 2,
+      "image_description": "A computer dashboard interface displaying flagged posts with only two labels visible: 'hate speech' or 'not hate speech'. The moderators observe the screen, appearing slightly puzzled by the lack of context. The visuals emphasize simplicity and monotony, showing uniform posts on the dashboard. The scene is illustrated in a cool-toned flat style to highlight technological limitation.",
+      "caption": "safeChats currently uses a traditional sentiment analysis model that flags posts as either hate speech or not hate speech."
+    }},
+    {{
+      "screen_number": 3,
+      "image_description": "Inside the moderation center, a content moderator reviews posts written in multiple languages on multiple monitors. The moderator takes handwritten notes and highlights unclear posts with sticky notes while frowning in concentration. The lighting is dimmer, symbolizing effort and cognitive load. The visual style remains flat and professional, using muted greys and blues.",
+      "caption": "While this approach helps identify harmful content in English, moderators face a serious challenge — the system provides no explanation for its decisions and cannot support the growing marketplace of the platform in multiple countries."
+    }},
+    {{
+      "screen_number": 4,
+      "image_description": "Three moderators sit together at a long desk filled with screens showing flagged posts. One moderator leans back, another rubs their forehead, and a third scrolls through endless messages. The atmosphere is tense and slightly fatigued, with soft overhead lighting. The visual emphasizes the emotional burden of unclear decisions in a realistic office setting.",
+      "caption": "Without clear reasoning and multi-language support, human reviewers must spend extra time interpreting why a post was flagged and determining whether the classification was fair or contextually accurate."
+    }},
+    {{
+      "screen_number": 5,
+      "image_description": "A conference room scene featuring the Head of Content Moderation, AI engineers, and senior leaders gathered around a digital whiteboard showing conceptual AI architecture. Laptops and holographic visuals are on the table. The lighting is bright and forward-looking, symbolizing innovation. The color palette includes optimistic shades of teal and gold.",
+      "caption": "To improve both speed and transparency, safeChats is exploring the potential of Generative AI (GenAI) and Large Language Models (LLMs)."
+    }},
+    {{
+      "screen_number": 6,
+      "image_description": "A side-by-side comparison of two digital interfaces: on the left, a basic model incorrectly flags a post for containing the word 'destroyed'; on the right, a modern AI interface shows contextual understanding, displaying a visual of balanced speech bubbles and multilingual cues. The scene conveys accuracy and intelligence, using clean, illustrative graphics without text or labels.",
+      "caption": "Unlike standard classifiers, LLMs can understand context, sarcasm, and nuance in multiple languages, explain their reasoning in natural language, and suggest better moderation responses such as rephrasing or issuing a warning."
+    }},
+    {{
+      "screen_number": 7,
+      "image_description": "A bright office with moderators smiling as they interact with a transparent, AI-assisted moderation dashboard. The central screen displays visuals of global communication and safety icons. The environment feels calm and empowered, with green and light blue hues symbolizing trust and progress.",
+      "caption": "By leveraging feedback loops and fine-tuning, safeChats aims to build a smarter, more transparent moderation system — one that empowers human moderators and keeps online conversations safe."
+    }}
+  ]
+"""
                 
                 response = client.chat.completions.create(
                     model="gpt-4-1106-preview",
@@ -881,14 +1027,14 @@ Format as JSON:
                 else:
                     st.error("Failed to parse screen data")
             except Exception as e:
-                st.error(f"❌ Error generating screens: {str(e)}")
+                st.error(f"Error generating screens: {str(e)}")
                 return
     
     # Display and edit screens
     screens = st.session_state.screen_data.get("screens", [])
     
     for i, screen in enumerate(screens):
-        with st.expander(f"Screen {i+1}", expanded=False):
+        with st.expander(f"Screen {i+1}", expanded=True):
             image_desc = st.text_area(f"Image Description", value=screen.get("image_description", ""), key=f"screen_{i}_img", height=100)
             caption = st.text_area(f"Caption", value=screen.get("caption", ""), key=f"screen_{i}_caption", height=80)
             screens[i]["image_description"] = image_desc
@@ -904,7 +1050,7 @@ Format as JSON:
             st.rerun()
     
     with col2:
-        if st.button("💾 Save Screens", type="primary"):
+        if st.button("Save & Generate Images", type="primary"):
             try:
                 # Save to file
                 course_title = st.session_state.form_data["course"].get("course_title", "")
@@ -916,11 +1062,231 @@ Format as JSON:
                 with open(screens_filepath, 'w') as f:
                     json.dump(st.session_state.screen_data, f, indent=2)
                 
-                st.success("✅ Screens saved successfully!")
+                st.success("Screens saved successfully!")
+                st.session_state.current_step = 6
+                st.rerun()
             except Exception as e:
-                st.error(f"❌ Error saving screens: {str(e)}")
+                st.error(f"Error saving screens: {str(e)}")
     
     with col3:
-        if st.button("🔄 Regenerate", type="secondary"):
+        if st.button("Regenerate", type="secondary"):
             st.session_state.screens_need_generation = True
             st.rerun()
+
+
+def step_image_generation():
+    """Step 6: Generate Images for Each Screen"""
+    st.markdown('<div class="step-header">Image Generation</div>', unsafe_allow_html=True)
+    
+    col_title, col_help = st.columns([3, 1])
+    with col_title:
+        st.markdown('<div class="step-description">Generate AI images for each screen in your scenario.</div>', unsafe_allow_html=True)
+    with col_help:
+        if st.button("Prompting Tips", help="Best practices for image generation"):
+            if "show_prompt_tips" not in st.session_state:
+                st.session_state.show_prompt_tips = True
+            else:
+                st.session_state.show_prompt_tips = not st.session_state.show_prompt_tips
+            st.rerun()
+    
+    if st.session_state.get("show_prompt_tips", False):
+        with st.expander("Image Generation Best Practices", expanded=True):
+            st.markdown("""
+            **Character Diversity:**
+            - Ensure characters represent diverse ethnicities, genders, ages, and backgrounds
+            - Avoid stereotypes and ensure authentic representation
+            
+            **Visual Quality:**
+            - Use clear, specific visual descriptions (lighting, setting, mood)
+            - Avoid textual elements in images (no text, labels, or symbols)
+            
+            **Image Description Tips:**
+            - Describe the setting and atmosphere clearly
+            - Include relevant props and context that support the learning objective
+            - Avoid complex abstractions or metaphors that AI struggles to render
+            """)
+            if st.button("Close", key="close_tips"):
+                st.session_state.show_prompt_tips = False
+                st.rerun()
+    
+    # Initialize image generation
+    if "current_image_index" not in st.session_state:
+        st.session_state.current_image_index = 0
+    
+    if "generated_images" not in st.session_state:
+        st.session_state.generated_images = []
+    
+    screens = st.session_state.screen_data.get("screens", [])
+    if not screens:
+        st.error("No screens found. Please go back and generate screens first.")
+        if st.button("← Back to Screens"):
+            st.session_state.current_step = 5
+            st.rerun()
+        return
+    
+    current_idx = st.session_state.current_image_index
+    if current_idx >= len(screens):
+        st.success("All images generated successfully!")
+        st.info(f"You've completed generating {len(screens)} images for your scenario.")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("← Back to Screens", type="secondary"):
+                st.session_state.current_step = 5
+                st.rerun()
+        with col2:
+            if st.button("Start Over", type="primary"):
+                st.session_state.current_image_index = 0
+                st.session_state.generated_images = []
+                st.rerun()
+        return
+    
+    current_screen = screens[current_idx]
+    
+    st.subheader(f"Screen {current_idx + 1} of {len(screens)}")
+    
+    # Allow editing before generation
+    edited_image_desc = st.text_area(
+        "Image Description",
+        value=current_screen.get("image_description", ""),
+        key=f"edit_img_desc_{current_idx}",
+        height=100
+    )
+    
+    edited_caption = st.text_area(
+        "Caption",
+        value=current_screen.get("caption", ""),
+        key=f"edit_caption_{current_idx}",
+        height=80
+    )
+    
+    screens[current_idx]["image_description"] = edited_image_desc
+    screens[current_idx]["caption"] = edited_caption
+    
+    # Check if regeneration is needed
+    needs_generation = current_idx >= len(st.session_state.generated_images) or not st.session_state.generated_images[current_idx].get("image_url")
+    
+    # Auto-regenerate if flag is set
+    auto_regenerate = st.session_state.get("regenerate_image") == current_idx
+    if auto_regenerate:
+        needs_generation = True
+        st.session_state.regenerate_image = None
+    
+    # Generate image if not already generated for this screen
+    if needs_generation:
+        if auto_regenerate:
+            # Auto-generate on rerun after regenerate button clicked
+            pass
+        elif not st.button("Generate Image", type="primary", use_container_width=True):
+            return
+        
+        # Generate the image
+        if True:
+            with st.spinner(f"🤖 Generating image {current_idx + 1} of {len(screens)}..."):
+                try:
+                    client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                    
+                    visual_style = st.session_state.metadata_data.get("visual_style", "Low-poly graphics, vector graphics, flat color palette, minimalist, simple vector style")
+                    aspect_ratio = st.session_state.metadata_data.get("aspect_ratio", "16:9")
+                    
+                    actors = st.session_state.metadata_data.get("actors", [])
+                    actor_appearances = [f"{a.get('name', '')}: {a.get('appearance', '')}" for a in actors if a.get("appearance")]
+                    actor_context = f" Character appearances for consistency: {'. '.join(actor_appearances)}." if actor_appearances else ""
+                    
+                    # Include previous screen context for consistency
+                    prev_context = ""
+                    if current_idx > 0:
+                        prev_screen = screens[current_idx - 1]
+                        prev_desc = prev_screen.get("image_description", "")
+                        if prev_desc:
+                            prev_context = f" Previous screen context for visual consistency: {prev_desc}. "
+                    
+                    image_prompt = f"{edited_image_desc}{prev_context}{actor_context} Style: {visual_style}. Aspect ratio: {aspect_ratio}."
+                    
+                    response = client.images.generate(
+                        model="dall-e-3",
+                        prompt=image_prompt,
+                        size="1024x1024" if aspect_ratio == "1:1" else "1792x1024" if aspect_ratio == "16:9" else "1024x1792",
+                        quality="standard",
+                        n=1
+                    )
+                    
+                    image_url = response.data[0].url
+                    
+                    if current_idx >= len(st.session_state.generated_images):
+                        st.session_state.generated_images.extend([{}] * (current_idx - len(st.session_state.generated_images) + 1))
+                    
+                    st.session_state.generated_images[current_idx] = {
+                        "image_url": image_url,
+                        "accepted": False,
+                        "screen_number": current_idx + 1
+                    }
+                    
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error generating image: {str(e)}")
+                    return
+    
+    # Display current screen image if generated
+    if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_url"):
+        st.markdown("---")
+        st.subheader("Current Generated Image")
+        current_image = st.session_state.generated_images[current_idx]
+        st.image(current_image["image_url"], use_container_width=True)
+    
+    # Show previous screens compiled
+    prev_generated = [(i, img) for i, img in enumerate(st.session_state.generated_images) if i < current_idx and img.get("image_url")]
+    if prev_generated:
+        st.markdown("---")
+        st.subheader("Previous Screens (Sequential View)")
+        num_per_row = 3
+        for row_start in range(0, len(prev_generated), num_per_row):
+            row_items = prev_generated[row_start:row_start + num_per_row]
+            cols = st.columns(len(row_items))
+            for idx, (orig_idx, img_data) in enumerate(row_items):
+                with cols[idx]:
+                    st.image(img_data["image_url"], width=200)
+                    st.caption(f"Screen {orig_idx + 1}")
+    
+    # Action buttons  
+    st.markdown("---")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("Previous", disabled=current_idx == 0, type="secondary"):
+            st.session_state.current_image_index = current_idx - 1
+            st.rerun()
+    
+    with col2:
+        # Only show accept if image is generated
+        if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_url"):
+            if st.button("Accept & Continue" if current_idx < len(screens) - 1 else " Accept & Finish", type="primary"):
+                try:
+                    # Save screens with edits
+                    course_title = st.session_state.form_data["course"].get("course_title", "")
+                    module_title = st.session_state.form_data["project"].get("module_title", "")
+                    course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                    module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                    screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+                    os.makedirs(os.path.dirname(screens_filepath), exist_ok=True)
+                    with open(screens_filepath, 'w') as f:
+                        json.dump(st.session_state.screen_data, f, indent=2)
+                    
+                    # Save generated images
+                    images_filepath = f"data/{course_name}/{module_name}/text_outputs/generated_images.json"
+                    os.makedirs(os.path.dirname(images_filepath), exist_ok=True)
+                    with open(images_filepath, 'w') as f:
+                        json.dump(st.session_state.generated_images, f, indent=2)
+                    
+                    st.session_state.generated_images[current_idx]["accepted"] = True
+                    if current_idx < len(screens) - 1:
+                        st.session_state.current_image_index = current_idx + 1
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error saving: {str(e)}")
+    
+    with col3:
+        if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_url"):
+            if st.button("Regenerate Image", type="secondary"):
+                st.session_state.generated_images[current_idx]["image_url"] = None
+                st.session_state.regenerate_image = current_idx
+                st.rerun()

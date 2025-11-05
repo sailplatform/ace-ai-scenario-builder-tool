@@ -1,0 +1,29 @@
+{
+  "screens": [
+    {
+      "screen_number": 1,
+      "image_description": "A young professional man sits in a modern, well-lit office surrounded by multiple computer monitors displaying colorful social media feeds. He is intently analyzing data, with a furrowed brow suggesting deep concentration. The environment is clean and tech-savvy, with indirect lighting creating a focused atmosphere.",
+      "caption": "Jackson, a diligent social media analyst, immerses himself in the bustling world of luxury travel conversations, ready to uncover emerging trends with his data analytics toolkit."
+    },
+    {
+      "screen_number": 2,
+      "image_description": "The same man is now engaged in writing code on a laptop, with a notable PyTorch logo on the screen. The room is dimmed, highlighting the screen's glow on his face. He is surrounded by books and notes, his expression a mix of determination and curiosity.",
+      "caption": "Harnessing his basic PyTorch skills, Jackson ventures into the realm of sentiment analysis, seeking to visualize and decode the emotions behind the posts."
+    },
+    {
+      "screen_number": 3,
+      "image_description": "A decisive moment as the man leans back in his chair, hands behind his head, eyes locked on a colorful burst of data visualizations, symbolizing an epiphany. The room is filled with a soft light, suggesting dawn or a new beginning.",
+      "caption": "Eureka! Patterns emerge, and Jackson identifies the pivotal triggers of sentiment, marking a turning point in his analysis."
+    },
+    {
+      "screen_number": 4,
+      "image_description": "The analyst is now presenting in a conference room to an attentive audience. He points to a blank screen where data would be, holding a confident posture. The audience, composed of well-dressed professionals, nods and discusses amongst themselves, impressed and engaged.",
+      "caption": "With clarity and confidence, Jackson unveils the insights to his agency's clients, informing their strategies with solid data-driven evidence."
+    },
+    {
+      "screen_number": 5,
+      "image_description": "A relaxed and satisfied man stands by a large window overlooking a cityscape, holding a coffee cup, as dawn breaks. The office is empty and quiet, a sign of work completed. The early light washes over him, symbolizing a fresh start and new opportunities.",
+      "caption": "As the day breaks, Jackson reflects on the impact of his work, knowing his analysis will shape how luxury travel brands engage with their discerning clientele."
+    }
+  ]
+}
