@@ -58,7 +58,8 @@ def display_progress():
             "Scenario Generation",
             "Metadata & Actors",
             "Screen Generation",
-            "Image Generation"
+            "Image Generation",
+            "Final Preview",
         ]
         
         progress = (st.session_state.current_step - 1) / len(steps)
@@ -284,7 +285,7 @@ def display_optional_details_modal():
                     if metadata:
                         num_screens = st.number_input("Number of Screens", value=metadata.get("num_screens", 5), key="sidebar_num_screens", min_value=1, max_value=20)
                         aspect_ratio = st.text_input("Aspect Ratio", value=metadata.get("aspect_ratio", "16:9"), key="sidebar_aspect_ratio")
-                        visual_style = st.text_input("Visual Style", value=metadata.get("visual_style", "Low-poly graphics, vector graphics, flat color palette, minimalist, simple vector style"), key="sidebar_visual_style")
+                        visual_style = st.text_input("Visual Style", value=metadata.get("visual_style", "A vibrant, semi-realistic digital illustration in a modern vector art style, with soft gradients, clean lines, and cinematic lighting."), key="sidebar_visual_style")
                         
                         actors = metadata.get("actors", [])
                         st.markdown("**Actors:**")

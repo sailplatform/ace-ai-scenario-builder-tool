@@ -3,6 +3,7 @@ Step functions for the AI Scenario Builder Tool workflow.
 """
 import json
 import os
+import html
 import streamlit as st
 import openai
 from utils import get_existing_courses, get_existing_modules, save_to_json
@@ -16,6 +17,38 @@ from scenario_writer import (
     load_scenario_data,
     get_scenario_filepath
 )
+
+
+def _sanitize_name(value, fallback):
+    cleaned = "".join(c for c in value if c.isalnum() or c in (" ", "-", "_")).rstrip().replace(" ", "_")
+    return cleaned or fallback
+
+
+def _get_text_output_dir():
+    course_title = st.session_state.form_data["course"].get("course_title", "")
+    module_title = st.session_state.form_data["project"].get("module_title", "")
+    course_name = _sanitize_name(course_title, "course")
+    module_name = _sanitize_name(module_title, "module")
+    base_dir = os.path.join("data", course_name, module_name, "text_outputs")
+    os.makedirs(base_dir, exist_ok=True)
+    return base_dir
+
+
+def _persist_generated_images():
+    if "generated_images" not in st.session_state:
+        return
+    base_dir = _get_text_output_dir()
+    filepath = os.path.join(base_dir, "generated_images.json")
+    with open(filepath, "w") as f:
+        json.dump(st.session_state.generated_images, f, indent=2)
+
+
+def _persist_final_slideshow(slides):
+    base_dir = _get_text_output_dir()
+    filepath = os.path.join(base_dir, "final_slideshow.json")
+    with open(filepath, "w") as f:
+        json.dump(slides, f, indent=2)
+    return filepath
 
 
 def generate_scenario_summaries_with_gpt(form_data, existing_scenario_data):
@@ -834,7 +867,7 @@ Output strictly in JSON format:
     
     visual_style = st.text_input(
         "Visual Style",
-        value="Low-poly graphics, vector graphics, flat color palette, minimalist, simple vector style",
+        value="A vibrant, semi-realistic digital illustration in a modern vector art style, with soft gradients, clean lines, and cinematic lighting.",
         key="edit_visual_style"
     )
     
@@ -1078,37 +1111,22 @@ def step_image_generation():
     """Step 6: Generate Images for Each Screen"""
     st.markdown('<div class="step-header">Image Generation</div>', unsafe_allow_html=True)
     
-    col_title, col_help = st.columns([3, 1])
-    with col_title:
-        st.markdown('<div class="step-description">Generate AI images for each screen in your scenario.</div>', unsafe_allow_html=True)
-    with col_help:
-        if st.button("Prompting Tips", help="Best practices for image generation"):
-            if "show_prompt_tips" not in st.session_state:
-                st.session_state.show_prompt_tips = True
-            else:
-                st.session_state.show_prompt_tips = not st.session_state.show_prompt_tips
+    screens = st.session_state.screen_data.get("screens", [])
+    generated_images = st.session_state.get("generated_images", [])
+    images_ready = (
+        screens
+        and len(generated_images) >= len(screens)
+        and all(
+            generated_images[i].get("image_url")
+            for i in range(len(screens))
+        )
+    )
+    if images_ready:
+        if st.button("Preview Final Slideshow", key="go_to_preview", type="primary"):
+            st.session_state.preview_index = 0
+            st.session_state.current_step = 7
             st.rerun()
-    
-    if st.session_state.get("show_prompt_tips", False):
-        with st.expander("Image Generation Best Practices", expanded=True):
-            st.markdown("""
-            **Character Diversity:**
-            - Ensure characters represent diverse ethnicities, genders, ages, and backgrounds
-            - Avoid stereotypes and ensure authentic representation
-            
-            **Visual Quality:**
-            - Use clear, specific visual descriptions (lighting, setting, mood)
-            - Avoid textual elements in images (no text, labels, or symbols)
-            
-            **Image Description Tips:**
-            - Describe the setting and atmosphere clearly
-            - Include relevant props and context that support the learning objective
-            - Avoid complex abstractions or metaphors that AI struggles to render
-            """)
-            if st.button("Close", key="close_tips"):
-                st.session_state.show_prompt_tips = False
-                st.rerun()
-    
+
     # Initialize image generation
     if "current_image_index" not in st.session_state:
         st.session_state.current_image_index = 0
@@ -1116,7 +1134,6 @@ def step_image_generation():
     if "generated_images" not in st.session_state:
         st.session_state.generated_images = []
     
-    screens = st.session_state.screen_data.get("screens", [])
     if not screens:
         st.error("No screens found. Please go back and generate screens first.")
         if st.button("← Back to Screens"):
@@ -1142,6 +1159,41 @@ def step_image_generation():
     
     current_screen = screens[current_idx]
     
+    # Navigation section - jump to any screen
+    st.markdown("---")
+    st.subheader("Navigation")
+    nav_cols = st.columns([2, 1])
+    with nav_cols[0]:
+        all_screen_options = list(range(len(screens)))
+        selected_screen = st.selectbox(
+            "Jump to Screen",
+            options=all_screen_options,
+            format_func=lambda x: f"Screen {x + 1}" + (" (Generated)" if x < len(st.session_state.generated_images) and st.session_state.generated_images[x].get("image_url") else " (Not Generated)"),
+            index=current_idx,
+            key="nav_select_screen"
+        )
+        if selected_screen != current_idx:
+            st.session_state.current_image_index = selected_screen
+            st.rerun()
+        st.caption(f"Current: Screen {current_idx + 1} of {len(screens)}")
+    with nav_cols[1]:
+        with st.expander("Prompting Tips", expanded=False):
+            st.markdown("""
+            **Character Diversity:**
+            - Ensure characters represent diverse ethnicities, genders, ages, and backgrounds
+            - Avoid stereotypes and ensure authentic representation
+            
+            **Visual Quality:**
+            - Use clear, specific visual descriptions (lighting, setting, mood)
+            - Avoid textual elements in images (no text, labels, or symbols)
+            
+            **Image Description Tips:**
+            - Describe the setting and atmosphere clearly
+            - Include relevant props and context that support the learning objective
+            - Avoid complex abstractions or metaphors that AI struggles to render
+            """)
+    
+    st.markdown("---")
     st.subheader(f"Screen {current_idx + 1} of {len(screens)}")
     
     # Allow editing before generation
@@ -1185,7 +1237,7 @@ def step_image_generation():
                 try:
                     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
                     
-                    visual_style = st.session_state.metadata_data.get("visual_style", "Low-poly graphics, vector graphics, flat color palette, minimalist, simple vector style")
+                    visual_style = st.session_state.metadata_data.get("visual_style", "A vibrant, semi-realistic digital illustration in a modern vector art style, with soft gradients, clean lines, and cinematic lighting.")
                     aspect_ratio = st.session_state.metadata_data.get("aspect_ratio", "16:9")
                     
                     actors = st.session_state.metadata_data.get("actors", [])
@@ -1220,32 +1272,80 @@ def step_image_generation():
                         "accepted": False,
                         "screen_number": current_idx + 1
                     }
+                    _persist_generated_images()
                     
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error generating image: {str(e)}")
                     return
     
-    # Display current screen image if generated
-    if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_url"):
+    # Display current screen image
+    # st.markdown("---")
+    # st.subheader("Current Generated Image")
+    # if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_url"):
+    #     current_image = st.session_state.generated_images[current_idx]
+    #     st.image(current_image["image_url"], width=360)
+    # else:
+    #     st.info("Generate this screen's image to preview it here.")
+
+    all_generated = [(i, img) for i, img in enumerate(st.session_state.generated_images) if img.get("image_url")]
+    if all_generated:
         st.markdown("---")
-        st.subheader("Current Generated Image")
-        current_image = st.session_state.generated_images[current_idx]
-        st.image(current_image["image_url"], use_container_width=True)
-    
-    # Show previous screens compiled
-    prev_generated = [(i, img) for i, img in enumerate(st.session_state.generated_images) if i < current_idx and img.get("image_url")]
-    if prev_generated:
-        st.markdown("---")
-        st.subheader("Previous Screens (Sequential View)")
+        st.subheader("All Generated Screens")
         num_per_row = 3
-        for row_start in range(0, len(prev_generated), num_per_row):
-            row_items = prev_generated[row_start:row_start + num_per_row]
-            cols = st.columns(len(row_items))
+
+        for row_start in range(0, len(all_generated), num_per_row):
+            row_items = all_generated[row_start:row_start + num_per_row]
+            cols = st.columns(len(row_items), gap="small")
+
             for idx, (orig_idx, img_data) in enumerate(row_items):
                 with cols[idx]:
-                    st.image(img_data["image_url"], width=200)
-                    st.caption(f"Screen {orig_idx + 1}")
+                    is_current = orig_idx == current_idx
+
+                    # Column-scoped wrapper prevents overflow
+                    wrapper_style = (
+                        "width:100%; max-width:100%; overflow:hidden; "
+                        "border-radius:8px;"
+                    )
+                    img_style = (
+                        "display:block; width:100%; max-width:100%; height:auto; "
+                        "border-radius:8px;"
+                    )
+                    if not is_current:
+                        img_style += " filter:grayscale(65%) contrast(95%); opacity:0.75;"
+
+                    st.markdown(
+                        f"""
+                        <div style="{wrapper_style}">
+                        <img src="{html.escape(img_data['image_url'])}" style="{img_style}">
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                    caption_text = screens[orig_idx].get("caption", "") if orig_idx < len(screens) else ""
+                    if caption_text:
+                        st.markdown(
+                            f"""
+                            <div style="
+                                margin-top:6px; font-size:0.8rem; line-height:1.3;
+                                color:#3a3a3a; text-align:left;
+                                max-width:100%; white-space:normal;
+                                word-break:break-word; overflow-wrap:anywhere;">
+                                {html.escape(caption_text)}
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+
+                    if st.button(
+                        f"Edit Screen {orig_idx + 1}",
+                        key=f"nav_btn_{orig_idx}",
+                        use_container_width=True,          # stays inside the column
+                        type="primary" if is_current else "secondary",
+                    ):
+                        st.session_state.current_image_index = orig_idx
+                        st.rerun()
     
     # Action buttons  
     st.markdown("---")
@@ -1283,10 +1383,113 @@ def step_image_generation():
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error saving: {str(e)}")
+                finally:
+                    _persist_generated_images()
     
     with col3:
         if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_url"):
             if st.button("Regenerate Image", type="secondary"):
                 st.session_state.generated_images[current_idx]["image_url"] = None
                 st.session_state.regenerate_image = current_idx
+                _persist_generated_images()
                 st.rerun()
+
+
+def step_final_preview():
+    """Step 7: Review final images and captions in a slideshow."""
+    st.markdown('<div class="step-header">Final Image Slideshow</div>', unsafe_allow_html=True)
+    
+    screens = st.session_state.screen_data.get("screens", [])
+    images = st.session_state.generated_images
+    ready = (
+        screens
+        and len(images) >= len(screens)
+        and all(images[i].get("image_url") for i in range(len(screens)))
+    )
+
+    if not ready:
+        st.warning("Complete image generation for every screen before opening the slideshow.")
+        if st.button("Return to Image Generation", type="primary"):
+            st.session_state.current_step = 6
+            st.rerun()
+        return
+
+    if "preview_index" not in st.session_state or st.session_state.preview_index >= len(screens):
+        st.session_state.preview_index = 0
+
+    idx = st.session_state.preview_index
+    caption = screens[idx].get("caption", "")
+    image_url = images[idx].get("image_url", "")
+    slides = [
+        {
+            "image_url": images[i].get("image_url", ""),
+            "caption": screens[i].get("caption", ""),
+            "screen_number": i + 1,
+        }
+        for i in range(len(screens))
+    ]
+    slideshow_path = _persist_final_slideshow(slides)
+    slideshow_abs = os.path.abspath(slideshow_path)
+
+    st.info(
+        f"Final slideshow data is saved in `{slideshow_path}`. "
+        f"Primary captions and descriptions remain available in `screens.json`, and image URLs in `generated_images.json`."
+    )
+    st.markdown(f"[Open final_slideshow.json](vscode://file/{slideshow_abs})")
+
+    st.markdown(f"Screen {idx + 1} of {len(screens)}")
+
+    st.markdown(
+        f"""
+        <div style="position:relative; display:block; width:100%; max-width:960px; margin:0 auto;">
+            <img src="{html.escape(image_url)}" style="width:100%; border-radius:18px;">
+            <div style="
+                position:absolute;
+                left:24px;
+                right:24px;
+                bottom:24px;
+                background:rgba(255,255,255,0.94);
+                border-radius:14px;
+                padding:18px 22px;
+                box-shadow:0 8px 24px rgba(0,0,0,0.2);
+                font-size:1rem;
+                line-height:1.55;
+                color:#121212;">
+                {html.escape(caption)}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # whitespace between image and buttons
+    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+
+    def _go_prev():
+        i = st.session_state.get("preview_index", 0)
+        st.session_state.preview_index = max(i - 1, 0)
+
+    def _go_next(total):
+        i = st.session_state.get("preview_index", 0)
+        st.session_state.preview_index = min(i + 1, total - 1)
+
+    # place this block directly under the image, in the SAME parent column as the image
+    # narrow center columns for arrows, large spacers on sides
+    cols = st.columns([1, 0.12, 0.12, 1], gap="small")   # [spacer | prev | next | spacer]
+
+    with cols[1]:
+        st.button("◀", key="preview_prev",
+                disabled=idx <= 0,
+                use_container_width=True,
+                on_click=_go_prev)
+
+    with cols[2]:
+        st.button("▶", key="preview_next",
+                disabled=idx >= len(screens) - 1,
+                use_container_width=True,
+                on_click=_go_next, args=(len(screens)))
+
+    st.button("Back to Image Generation",
+            key="back_to_images",
+            type="secondary",
+            on_click=lambda: st.session_state.__setitem__("current_step", 6))

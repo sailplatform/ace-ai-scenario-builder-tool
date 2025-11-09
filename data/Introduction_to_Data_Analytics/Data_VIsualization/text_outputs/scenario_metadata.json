@@ -3,11 +3,17 @@
   "aspect_ratio": "16:9",
   "actors": [
     {
-      "name": "Jackson",
-      "role": "Social Media Analyst",
-      "purpose": "Jackson is trying to uncover emerging trends from social media data related to luxury travel. His objective is to analyze sentiment over time using PyTorch and visualize the data to identify triggers of positive and negative sentiments. This analysis will assist his agency's clients in customizing their offerings and marketing strategies to align with the preferences of high-end travelers.",
-      "appearance": "A mid-30s, East Asian male with a modern hairstyle, wearing smart casual attire such as a button-up shirt and glasses, indicating his analytical role."
+      "name": "Maya",
+      "role": "Data Analyst",
+      "purpose": "Maya is tasked with analyzing data to identify key performance indicators that correlate with high engagement across various social media platforms. Her objective is to present these findings to the creative team to improve future campaigns. Her decision-making context involves interpreting complex data sets and converting them into actionable insights.",
+      "appearance": "A woman in her early 30s, of South Asian descent, with medium-length black hair, wearing glasses and business casual attire."
+    },
+    {
+      "name": "Eli",
+      "role": "Creative Director",
+      "purpose": "Eli interacts with Maya by providing context to the creative elements of the social media campaigns. He listens to Maya's data-driven recommendations to adapt the creative strategies for better engagement.",
+      "appearance": "A gender-neutral person in their late 30s, of mixed ethnicity, with short curly hair, wearing a creative yet professional outfit, often seen with a tablet or design sketches."
     }
   ],
-  "visual_style": "Low-poly graphics, vector graphics, flat color palette, minimalist, simple vector style"
+  "visual_style": "A vibrant, semi-realistic digital illustration in a modern vector art style, with soft gradients, clean lines, and cinematic lighting."
 }

@@ -2,28 +2,28 @@
   "screens": [
     {
       "screen_number": 1,
-      "image_description": "A young professional man sits in a modern, well-lit office surrounded by multiple computer monitors displaying colorful social media feeds. He is intently analyzing data, with a furrowed brow suggesting deep concentration. The environment is clean and tech-savvy, with indirect lighting creating a focused atmosphere.",
-      "caption": "Jackson, a diligent social media analyst, immerses himself in the bustling world of luxury travel conversations, ready to uncover emerging trends with his data analytics toolkit."
+      "image_description": "A concerned young woman sits in a well-lit office surrounded by dual monitors displaying colorful dashboards of social media analytics. The office is modern, with plants and a large window showing a cityscape. The mood is one of focused determination as the woman leans in, reviewing the data.",
+      "caption": "Maya, a data analyst at SparkAd, uncovers a trend of declining engagement across a client's social media ad series, sparking her quest to analyze the cause."
     },
     {
       "screen_number": 2,
-      "image_description": "The same man is now engaged in writing code on a laptop, with a notable PyTorch logo on the screen. The room is dimmed, highlighting the screen's glow on his face. He is surrounded by books and notes, his expression a mix of determination and curiosity.",
-      "caption": "Harnessing his basic PyTorch skills, Jackson ventures into the realm of sentiment analysis, seeking to visualize and decode the emotions behind the posts."
+      "image_description": "The analyst is now in a conference room, pointing at a large monitor where a video of the ad campaign plays muted; her other hand rests on a stack of printed reports. The creative team watches attentively, frowns of concern echoing the room's tension.",
+      "caption": "Maya collaborates with the creative team, sharing the concerning engagement data and seeking insights into the creative elements of the campaigns."
     },
     {
       "screen_number": 3,
-      "image_description": "A decisive moment as the man leans back in his chair, hands behind his head, eyes locked on a colorful burst of data visualizations, symbolizing an epiphany. The room is filled with a soft light, suggesting dawn or a new beginning.",
-      "caption": "Eureka! Patterns emerge, and Jackson identifies the pivotal triggers of sentiment, marking a turning point in his analysis."
+      "image_description": "A close-up on Maya's hands, illuminated by the screen's glow as she filters and sorts through data. Her expression is one of deep concentration, a visual metaphor for the pivotal moment of discovering patterns and insights.",
+      "caption": "In the quiet of the night, Maya reaches a breakthrough, identifying the key performance indicators that correlate with successful engagement."
     },
     {
       "screen_number": 4,
-      "image_description": "The analyst is now presenting in a conference room to an attentive audience. He points to a blank screen where data would be, holding a confident posture. The audience, composed of well-dressed professionals, nods and discusses amongst themselves, impressed and engaged.",
-      "caption": "With clarity and confidence, Jackson unveils the insights to his agency's clients, informing their strategies with solid data-driven evidence."
+      "image_description": "Maya is back in the conference room, this time with confident body language, presenting her findings to the team. The creative director, Eli, is nodding in understanding, as the team members exchange inspired looks.",
+      "caption": "Maya's data-driven analysis reveals not only where but why the campaign faltered, offering a clear direction for improvement."
     },
     {
       "screen_number": 5,
-      "image_description": "A relaxed and satisfied man stands by a large window overlooking a cityscape, holding a coffee cup, as dawn breaks. The office is empty and quiet, a sign of work completed. The early light washes over him, symbolizing a fresh start and new opportunities.",
-      "caption": "As the day breaks, Jackson reflects on the impact of his work, knowing his analysis will shape how luxury travel brands engage with their discerning clientele."
+      "image_description": "The final image shows the creative team working together harmoniously, with Maya's analytics on a screen in the background and new campaign sketches on the table. The office is bathed in warm, hopeful light, suggesting a new beginning.",
+      "caption": "Armed with Maya's insights, the team is poised to craft a new, more engaging social media campaign, demonstrating the power of analyzing information for social media."
     }
   ]
 }
