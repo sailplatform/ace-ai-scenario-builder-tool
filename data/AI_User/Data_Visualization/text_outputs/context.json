@@ -1,19 +1,21 @@
 {
   "course": {
-    "course_title": "AI User",
+    "course_title": "AI User ",
+    "course_description": "Learning AI Tools",
     "course_objectives": ""
   },
   "project": {
     "module_title": "Data Visualization",
     "module_description": "",
-    "key_concept": "How to visualize computer vision models for optimal prediction",
-    "existing_challenge": "Very simple PyTorch",
+    "key_concept": "Analyzing information to make decision",
+    "existing_challenge": "PyTorch",
     "project_learning_objectives": ""
   },
   "audience": {
-    "student_description": "navy professionals that know a bit of computer vision",
+    "professional_domain": "Marketing Professionals",
     "education_level": "undergrad_intro",
     "prerequisites": "",
     "class_size": 25
-  }
+  },
+  "additional_info": {}
 }

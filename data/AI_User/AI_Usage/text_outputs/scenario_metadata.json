@@ -1,0 +1,13 @@
+{
+  "num_screens": 5,
+  "aspect_ratio": "16:9",
+  "actors": [
+    {
+      "name": "Maya",
+      "role": "Social Media Manager",
+      "purpose": "Maya's objective is to optimize the AI tool for content moderation to handle ambiguous content such as satire and culturally specific references. She needs to fine-tune the AI to minimize false positives without overburdening human moderators, ensuring fair and accurate moderation while maintaining a positive user experience and compliance with platform policies.",
+      "appearance": "A woman in her late 20s, of mixed ethnicity with medium skin tone, shoulder-length curly hair, wearing glasses and casual-professional attire that reflects her creative and tech-savvy nature."
+    }
+  ],
+  "visual_style": "A vibrant, semi-realistic digital illustration in a modern vector art style, with soft gradients, clean lines, and cinematic lighting."
+}

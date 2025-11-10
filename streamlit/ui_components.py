@@ -2,44 +2,164 @@
 UI components and styling for the AI Scenario Builder Tool.
 """
 import streamlit as st
+import os
 
+LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "ace_ai.png")
 
 def get_custom_css():
     """Return custom CSS styles for the application"""
     return """
     <style>
-        .main-header {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #1f77b4;
-            text-align: center;
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+        :root {
+            --carnegie-red: #C41230;
+            --scots-rose: #A50034;
+            --gold-thread: #FDB515;
+            --green-thread: #7DAF42;
+            --teal-thread: #00847F;
+            --blue-thread: #002D72;
+            --highlands-sky: #A4DDED;
+            --iron-gray: #54565B;
+            --soft-gray: #f4f4f4;
+            --deep-black: #101820;
+            --midnight: #1E1E25;
+        }
+        html, body, [class*="css"] {
+            font-family: 'Open Sans', sans-serif !important;
+            color: var(--deep-black);
+            background-color: #ffffff;
+        }
+        .ace-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.15rem;
             margin-bottom: 2rem;
+        }
+        .ace-header-logo svg {
+            width: 78px;
+            height: 78px;
+        }
+        .ace-header-text .title {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: var(--deep-black);
+            letter-spacing: -0.5px;
+        }
+        .ace-header-text .subtitle {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--iron-gray);
+            letter-spacing: 0.4px;
+        }
+        .main-header {
+            display:none;
         }
         .step-header {
             font-size: 1.8rem;
-            font-weight: bold;
-            color: #2e8b57;
+            font-weight: 700;
+            color: var(--carnegie-red);
             margin-top: 2rem;
             margin-bottom: 1rem;
+            letter-spacing: 0.2px;
         }
         .step-description {
-            font-size: 1.1rem;
-            color: #666;
+            font-size: 1.05rem;
+            color: var(--iron-gray);
             margin-bottom: 1.5rem;
         }
         .success-box {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            border-radius: 0.5rem;
+            background-color: rgba(125, 175, 66, 0.12);
+            border: 1px solid rgba(125, 175, 66, 0.4);
+            border-radius: 0.65rem;
             padding: 1rem;
             margin: 1rem 0;
+            color: var(--deep-black);
         }
         .info-box {
-            background-color: #e7f3ff;
-            border: 1px solid #b3d9ff;
-            border-radius: 0.5rem;
+            background-color: rgba(164, 221, 237, 0.25);
+            border: 1px solid rgba(164, 221, 237, 0.6);
+            border-radius: 0.65rem;
             padding: 1rem;
             margin: 1rem 0;
+            color: var(--deep-black);
+        }
+        .stButton button {
+            border-radius: 999px;
+            padding: 0.6rem 1.6rem;
+            font-weight: 600;
+            border: none;
+            background: linear-gradient(135deg, var(--carnegie-red), var(--scots-rose));
+            color: #ffffff;
+            box-shadow: 0 8px 18px rgba(196, 18, 48, 0.22);
+        }
+        .stButton button:hover {
+            background: linear-gradient(135deg, var(--scots-rose), var(--carnegie-red));
+            box-shadow: 0 10px 22px rgba(196, 18, 48, 0.28);
+        }
+        .stButton button[kind="secondary"] {
+            background: #ffffff;
+            color: var(--carnegie-red);
+            border: 1px solid rgba(196, 18, 48, 0.32);
+            box-shadow: none;
+        }
+        .stButton button[kind="secondary"]:hover {
+            background: rgba(196, 18, 48, 0.08);
+        }
+        .stProgress > div > div > div {
+            background: linear-gradient(90deg, var(--carnegie-red), var(--gold-thread));
+        }
+        .stSidebar {
+            background: #ffffff;
+        }
+        .stSidebar .stMarkdown,
+        .stSidebar .stText {
+            color: var(--deep-black);
+        }
+        .ace-sidebar-highlight {
+            background: rgba(196, 18, 48, 0.08);
+            border-left: 4px solid var(--carnegie-red);
+            padding: 0.8rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        textarea, input, select {
+            border-radius: 10px !important;
+            border: 1px solid rgba(16, 24, 32, 0.12) !important;
+            box-shadow: none !important;
+        }
+        textarea:focus, input:focus {
+            border: 1px solid var(--carnegie-red) !important;
+            box-shadow: 0 0 0 1px rgba(196, 18, 48, 0.2) !important;
+        }
+        .st-expander > div:first-child {
+            background: rgba(0, 45, 114, 0.07);
+            border-radius: 10px;
+        }
+        .ace-badge {
+            display:inline-flex;
+            align-items:center;
+            background: rgba(196, 18, 48, 0.08);
+            color: var(--carnegie-red);
+            padding: 0.15rem 0.6rem;
+            border-radius:999px;
+            font-size:0.75rem;
+            font-weight:600;
+            letter-spacing:0.35px;
+        }
+        .ace-nav {
+            width:100%;
+            max-width:960px;
+            margin:0 auto;
+        }
+        .ace-nav button {
+            font-size:1.8rem !important;
+            padding:0.3rem 1.4rem !important;
+            border-radius:999px !important;
+        }
+        .ace-nav-back button {
+            font-size:0.95rem !important;
+            padding:0.45rem 1.4rem !important;
         }
     </style>
     """
@@ -72,14 +192,37 @@ def display_progress():
 
 def display_header():
     """Display the main header and welcome message"""
-    st.markdown('<div class="main-header">AI Scenario Builder Tool</div>', unsafe_allow_html=True)
-    st.markdown("""
-    <div class="info-box">
-    <strong>Welcome!</strong> This tool will guide you through creating a comprehensive project configuration 
-    that can be used to generate AI-assisted course scenarios and motivation slides. 
-    Follow the steps below to build your project profile.
-    </div>
-    """, unsafe_allow_html=True)
+
+    from streamlit.components.v1 import html
+
+    # Use columns to position image and title side by side and centered
+    col1, col2, col3 = st.columns([1, 3, 1])
+    with col1:
+        st.empty()
+    with col2:
+        inner_col1, inner_col2 = st.columns([1, 4])
+        with inner_col1:
+            st.image(str(LOGO_PATH), width=78)
+        with inner_col2:
+            st.markdown(
+                """
+                <div class="ace-header-text" style="display: flex; align-items: center; height: 100%;">
+                    <div class="title">ACE AI Scenario Builder</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+    with col3:
+        st.empty()
+    st.markdown(
+        """
+        <div class="info-box">
+            This tool will guide you through creating a complete project setup that helps you design engaging learning scenarios 
+    and presentation content. Follow the steps below to build your customized scenario.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def display_optional_details_modal():

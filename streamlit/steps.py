@@ -320,7 +320,7 @@ def step_existing_content_selection():
 
 def step_project_setup():
     """Step 1: Combined Project Setup - All required information in one place"""
-    st.markdown('<div class="step-header">Project Setup</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Project Information</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="step-description">Let\'s set up your project with the essential information.</div>', unsafe_allow_html=True)
     
@@ -426,14 +426,10 @@ def step_review_export():
     st.subheader(" Course Description")
     st.markdown(f"**Description:** {course_data.get('course_description', 'Not provided')}")
     
-    
-    # Save and continue options
-    st.subheader(" Save Configuration")
-    
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("← Back to Project Setup", type="secondary"):
+        if st.button("← Back to Project Information", type="secondary"):
             st.session_state.current_step = 1
             st.rerun()
     
@@ -546,10 +542,14 @@ def step_scenario_generation():
         st.subheader(" Edit Your Selected Scenario")
         
         # Text area for editing the selected scenario
+        scenario_text = scenarios[selected_scenario] if selected_scenario < len(scenarios) else ""
+        approx_height = int(len(scenario_text) * 1.04) + 32  # just a bit bigger than text
+        dynamic_height = min(max(130, approx_height), 240)   # cap reasonable max
+
         edited_scenario = st.text_area(
             "Edit your scenario:",
-            value=scenarios[selected_scenario] if selected_scenario < len(scenarios) else "",
-            height=100,
+            value=scenario_text,
+            height=dynamic_height,
             key="edit_scenario"
         )
         
@@ -559,15 +559,14 @@ def step_scenario_generation():
             st.session_state.scenario_data["final_scenario"] = edited_scenario
         
         # LLM-based editing
-        st.markdown("**Or use AI to refine your scenario:**")
         update_instructions = st.text_area(
-            "Describe how you'd like to modify the scenario:",
+            "Or use AI to refine your scenario. Describe how you'd like to modify the scenario:",
             placeholder="e.g., Make it more technical, add more diversity, focus on practical applications",
             height=80,
             key="llm_update_instructions"
         )
         
-        if st.button("✨Update with AI", type="secondary"):
+        if st.button("Update with AI", type="secondary"):
             if update_instructions:
                 with st.spinner("🤖 Updating scenario with AI..."):
                     try:  
@@ -817,12 +816,22 @@ Output strictly in JSON format:
 
     for i, actor in enumerate(actors):
         with st.expander(f"Actor {i+1}: {actor.get('name', 'New Actor')}", expanded=True):
-            cols = st.columns([10, 1])
+            cols = st.columns([10, 1.4])
             with cols[0]:
                 name = st.text_input("Name", value=actor.get("name", ""), key=f"actor_{i}_name")
                 role = st.text_input("Role", value=actor.get("role", ""), key=f"actor_{i}_role")
-                purpose = st.text_area("Character's Objective", value=actor.get("purpose", ""), key=f"actor_{i}_purpose", height=80)
-                appearance = st.text_area("Visual Appearance", value=actor.get("appearance", ""), key=f"actor_{i}_appearance", height=80, help="Describe appearance including age, ethnicity, gender, distinctive features. Ensure diversity.")
+                purpose_text = actor.get("purpose", "")
+                appearance_text = actor.get("appearance", "")
+                # Dynamically calculate height based on length of text (minimum 80, max 400 for large entries)
+                purpose_height = min(max(80, int(len(purpose_text) * 1.2) + 40), 125)
+                appearance_height = min(max(80, int(len(appearance_text) * 1.2) + 40), 125)
+                purpose = st.text_area(
+                    "Character's Objective",
+                    value=purpose_text,
+                    key=f"actor_{i}_purpose",
+                    height=purpose_height
+                )
+                appearance = st.text_area("Visual Appearance", value=appearance_text, key=f"actor_{i}_appearance", height=appearance_height, help="Describe appearance including age, ethnicity, gender, distinctive features. Ensure diversity.")
             with cols[1]:
                 if st.button("Delete", key=f"delete_actor_{i}"):
                     to_delete = i
@@ -1109,8 +1118,6 @@ A suitable response could be:
 
 def step_image_generation():
     """Step 6: Generate Images for Each Screen"""
-    st.markdown('<div class="step-header">Image Generation</div>', unsafe_allow_html=True)
-    
     screens = st.session_state.screen_data.get("screens", [])
     generated_images = st.session_state.get("generated_images", [])
     images_ready = (
@@ -1162,15 +1169,16 @@ def step_image_generation():
     # Navigation section - jump to any screen
     st.markdown("---")
     st.subheader("Navigation")
-    nav_cols = st.columns([2, 1])
+    nav_cols = st.columns([0.5, 1])
     with nav_cols[0]:
         all_screen_options = list(range(len(screens)))
-        selected_screen = st.selectbox(
+        # To prevent typing, use st.radio (no free entry, just options)
+        selected_screen = st.radio(
             "Jump to Screen",
             options=all_screen_options,
             format_func=lambda x: f"Screen {x + 1}" + (" (Generated)" if x < len(st.session_state.generated_images) and st.session_state.generated_images[x].get("image_url") else " (Not Generated)"),
             index=current_idx,
-            key="nav_select_screen"
+            key="nav_radio_screen"
         )
         if selected_screen != current_idx:
             st.session_state.current_image_index = selected_screen
@@ -1475,7 +1483,8 @@ def step_final_preview():
 
     # place this block directly under the image, in the SAME parent column as the image
     # narrow center columns for arrows, large spacers on sides
-    cols = st.columns([1, 0.12, 0.12, 1], gap="small")   # [spacer | prev | next | spacer]
+    st.markdown("<div class='ace-nav'>", unsafe_allow_html=True)
+    cols = st.columns([1, 0.2, 0.2, 1], gap="small")
 
     with cols[1]:
         st.button("◀", key="preview_prev",
@@ -1487,9 +1496,13 @@ def step_final_preview():
         st.button("▶", key="preview_next",
                 disabled=idx >= len(screens) - 1,
                 use_container_width=True,
-                on_click=_go_next, args=(len(screens)))
+                on_click=_go_next, args=(len(screens),))
 
-    st.button("Back to Image Generation",
-            key="back_to_images",
-            type="secondary",
-            on_click=lambda: st.session_state.__setitem__("current_step", 6))
+    with cols[3]:
+        # st.markdown("<div class='ace-nav-back'>", unsafe_allow_html=True)
+        st.button("Back to Image Generation",
+                key="back_to_images",
+                type="secondary",
+                on_click=lambda: st.session_state.__setitem__("current_step", 6))
+        # st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)

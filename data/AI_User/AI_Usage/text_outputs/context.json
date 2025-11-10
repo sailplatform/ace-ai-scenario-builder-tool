@@ -1,0 +1,21 @@
+{
+  "course": {
+    "course_title": "AI User",
+    "course_description": "How to use AI tools for content moderation.",
+    "course_objectives": ""
+  },
+  "project": {
+    "module_title": "AI Usage",
+    "module_description": "",
+    "key_concept": "Analyzing information to make a decision",
+    "existing_challenge": "PyTorch.",
+    "project_learning_objectives": ""
+  },
+  "audience": {
+    "professional_domain": "Social Media Managers",
+    "education_level": "undergrad_intro",
+    "prerequisites": "",
+    "class_size": 25
+  },
+  "additional_info": {}
+}

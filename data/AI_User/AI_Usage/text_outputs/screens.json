@@ -1,0 +1,29 @@
+{
+  "screens": [
+    {
+      "screen_number": 1,
+      "image_description": "An office scene with a panoramic view of the bustling city at dusk, bathed in the warm glow of the setting sun. Maya, a young woman with a determined expression, is reviewing a stream of social media posts on a large, curved monitor. Her desk is adorned with cultural artifacts, hinting at her understanding of diverse content.",
+      "caption": "Maya, a social media manager at TrendyFeed, is faced with the challenge of swiftly moderating a surge in user-generated posts, ensuring accuracy and fairness."
+    },
+    {
+      "screen_number": 2,
+      "image_description": "A close-up of Maya's hands on the keyboard, with a dual-screen setup displaying AI moderation tools. One screen shows ambiguous posts highlighted in yellow. The room has a focused ambiance, with soft white light concentrating on her workspace, reflecting the intensifying challenge.",
+      "caption": "The AI tool struggles with satire and culturally specific references, leading to potential misclassification. Maya's task is to analyze and fine-tune the AI to minimize errors."
+    },
+    {
+      "screen_number": 3,
+      "image_description": "Depict Maya in a moment of contemplation, standing by a large glass window looking out at the city night lights. Her reflection merges with the algorithms and code streaming down the window's surface, symbolizing her critical decision point.",
+      "caption": "Caught in the dilemma between reducing false positives and not overburdening human moderators, Maya must make a pivotal decision on the AI tool's settings."
+    },
+    {
+      "screen_number": 4,
+      "image_description": "Show a relaxed and satisfied Maya collaborating with a small group of moderators in a well-lit, modern office. They're nodding and smiling as they observe reduced false positives on their monitors, indicating a successful outcome.",
+      "caption": "After Maya's adjustments, the AI tool's accuracy improves, easing the workload of the moderation team and enhancing the user experience."
+    },
+    {
+      "screen_number": 5,
+      "image_description": "A celebratory scene with Maya and her team clinking coffee mugs in a break room adorned with user appreciation notes on the walls. The atmosphere is one of accomplishment and camaraderie, with warm lighting and a sense of community.",
+      "caption": "Maya's strategic analysis and decision-making lead to a fairer, more efficient content moderation process, reinforcing the importance of critical analysis in AI usage."
+    }
+  ]
+}
