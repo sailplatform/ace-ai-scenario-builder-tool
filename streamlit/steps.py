@@ -572,6 +572,9 @@ def step_scenario_generation():
     # st.markdown('<div class="step-header">Scenario Generation</div>', unsafe_allow_html=True)
     # st.markdown('<div class="step-description">Generate three scenario options using AI and select the best one for your project.</div>', unsafe_allow_html=True)
     
+    # Clear sidebar keys to ensure widgets sync with latest data
+    _clear_sidebar_keys()
+    
     # Check if scenario data already exists
     scenario_filepath = get_scenario_filepath(st.session_state.form_data)
     existing_scenario_data = load_scenario_data(scenario_filepath)
@@ -598,6 +601,8 @@ def step_scenario_generation():
     # Initialize scenario data if not exists
     if not hasattr(st.session_state, 'scenario_data') or not st.session_state.scenario_data:
         st.session_state.scenario_data = existing_scenario_data or {}
+        if existing_scenario_data:
+            _clear_sidebar_keys()
     
     # Initialize generation flag if not exists
     if "scenarios_need_generation" not in st.session_state:
@@ -799,16 +804,15 @@ safeChats is a fast-growing social media platform with active users worldwide. T
 
 def step_scenario_metadata():
     """Step 4: Generate Scenario Metadata and Actors"""
+    # Clear sidebar keys to ensure widgets sync with latest data
+    _clear_sidebar_keys()
+    
     st.markdown('<div class="step-header">Scenario Metadata & Actors</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Generate metadata and actors for your scenario using AI.</div>', unsafe_allow_html=True)
     
     # Initialize metadata generation flag
     if "metadata_need_generation" not in st.session_state:
         st.session_state.metadata_need_generation = True
-    
-    # Initialize metadata data if not exists
-    if "metadata_data" not in st.session_state or not st.session_state.metadata_data:
-        st.session_state.metadata_data = {}
     
     # Get final scenario
     final_scenario = st.session_state.scenario_data.get("final_scenario", "")
@@ -827,6 +831,12 @@ def step_scenario_metadata():
                 existing_metadata = json.load(f)
         except:
             pass
+    
+    # Initialize metadata data if not exists
+    if "metadata_data" not in st.session_state or not st.session_state.metadata_data:
+        st.session_state.metadata_data = existing_metadata or {}
+        if existing_metadata:
+            _clear_sidebar_keys()
     
     # Offer to use existing metadata
     if existing_metadata and existing_metadata.get("actors") and "metadata_need_generation" not in st.session_state:
@@ -1036,8 +1046,27 @@ Output strictly in JSON format:
 
 def step_screen_generation():
     """Step 5: Generate Screens with Image Descriptions and Captions"""
+    # Clear sidebar keys to ensure widgets sync with latest data
+    _clear_sidebar_keys()
+    
     st.markdown('<div class="step-header">Screen Generation</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Generate screens with image descriptions and captions for your scenario.</div>', unsafe_allow_html=True)
+    
+    # Get necessary data for file paths
+    course_title = st.session_state.form_data["course"].get("course_title", "")
+    module_title = st.session_state.form_data["project"].get("module_title", "")
+    course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+    module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+    screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+    
+    # Check for existing screen data
+    existing_screen_data = None
+    if os.path.exists(screens_filepath):
+        try:
+            with open(screens_filepath, 'r') as f:
+                existing_screen_data = json.load(f)
+        except:
+            pass
     
     # Initialize screen generation flag
     if "screens_need_generation" not in st.session_state:
@@ -1045,7 +1074,9 @@ def step_screen_generation():
     
     # Initialize screen data if not exists
     if "screen_data" not in st.session_state or not st.session_state.screen_data:
-        st.session_state.screen_data = {}
+        st.session_state.screen_data = existing_screen_data or {}
+        if existing_screen_data:
+            _clear_sidebar_keys()
     
     # Get necessary data
     final_scenario = st.session_state.scenario_data.get("final_scenario", "")

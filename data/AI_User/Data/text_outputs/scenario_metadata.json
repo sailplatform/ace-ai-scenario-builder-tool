@@ -1,0 +1,13 @@
+{
+  "num_screens": 5,
+  "aspect_ratio": "16:9",
+  "actors": [
+    {
+      "name": "Maya",
+      "role": "Social Media Manager",
+      "purpose": "Maya is responsible for moderating user-generated content and using her knowledge of PyTorch to analyze data, identify patterns in posts that correlate with customer complaints, and establish content guidelines to maintain a brand-safe environment while promoting a positive community.",
+      "appearance": "A woman in her late 20s, of South Asian descent, with medium-length black hair, wearing smart casual attire that reflects her creative and professional role."
+    }
+  ],
+  "visual_style": "A vibrant, semi-realistic digital illustration in a modern vector art style, with soft gradients, clean lines, and cinematic lighting."
+}
