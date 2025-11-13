@@ -1,0 +1,29 @@
+{
+  "screens": [
+    {
+      "screen_number": 1,
+      "image_description": "An engineer with a focused expression stands in front of a large, brightly lit assembly line in an automotive plant. Her eyes are fixed on a monitor displaying a slow-moving conveyor with car parts passing under an AI inspection camera. The environment is industrial and precise, with high-tech tools and safety equipment visible.",
+      "caption": "Anika, a dedicated quality assurance engineer at Apex Motors, observes the assembly line where an AI-powered computer vision system has just been implemented to detect defects."
+    },
+    {
+      "screen_number": 2,
+      "image_description": "The engineer is now pointing at the monitor with a puzzled look while discussing with a colleague. They are examining a colorful heat map on the screen that highlights potential defects on a car door panel. The surrounding area is busy with workers and robotic arms, but their attention is on the AI system's output.",
+      "caption": "Anika and Javier, an AI specialist, scrutinize the AI system's heat map, learning to interpret which highlighted areas signify actual defects needing human intervention."
+    },
+    {
+      "screen_number": 3,
+      "image_description": "In a moment of tension, the engineer leans closer to the screen, where a high-confidence score is flashing next to a specific defect on the heat map. Her colleague gestures towards the assembly line where the affected part is approaching a critical point.",
+      "caption": "Faced with a high-confidence alert from the AI, Anika must quickly decide whether to stop the assembly line and address the defect, balancing quality with production flow."
+    },
+    {
+      "screen_number": 4,
+      "image_description": "The engineer confidently presses a button, and a robotic arm smoothly removes the defective part from the line. She and her colleague exchange satisfied nods as the line continues to run efficiently in the background.",
+      "caption": "Trusting her understanding of the AI system's confidence scores, Anika intervenes just in time, preventing a defective part from continuing down the line without disrupting production."
+    },
+    {
+      "screen_number": 5,
+      "image_description": "The engineer is now leading a small group of her peers in a well-lit training room, pointing to a simplified mock-up of the AI interface on a screen. Everyone is engaged, taking notes and asking questions. The mood is collaborative and empowered.",
+      "caption": "Anika shares her insights on interpreting AI outputs with her team, ensuring that Apex Motors maintains its high-quality standards through responsible real-time inspection workflows."
+    }
+  ]
+}

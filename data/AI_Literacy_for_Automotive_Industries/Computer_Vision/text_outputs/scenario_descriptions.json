@@ -1,0 +1,3 @@
+{
+  "scenario_description": "At Apex Motors, a leading automotive manufacturer, the quality assurance team, including Anika, an experienced engineer, faces a high rate of minor defects going undetected on the assembly line. They have recently implemented an AI-powered computer vision system designed to identify these defects in real-time. However, the team must learn to interpret the AI system's confidence scores and heat maps to prioritize which defects require immediate human intervention. This is critical to ensuring the highest quality without halting production unnecessarily."
+}

@@ -414,6 +414,8 @@ def display_optional_details_modal():
                 if st.button("Update Scenario", use_container_width=True):
                     try:
                         st.session_state.scenario_data["final_scenario"] = updated_scenario
+                        from steps import _clear_sidebar_keys
+                        _clear_sidebar_keys()
                         
                         # Save to scenario_descriptions.json
                         course_title = st.session_state.form_data["course"].get("course_title", "")
@@ -490,6 +492,8 @@ def display_optional_details_modal():
                                         "visual_style": visual_style,
                                         "actors": actors_data
                                     })
+                                    from steps import _clear_sidebar_keys
+                                    _clear_sidebar_keys()
                                     
                                     course_title = st.session_state.form_data["course"].get("course_title", "")
                                     module_title = st.session_state.form_data["project"].get("module_title", "")
@@ -533,6 +537,8 @@ def display_optional_details_modal():
                                     with open(screens_filepath, 'w') as f:
                                         json.dump({"screens": screens}, f, indent=2)
                                     st.session_state.screen_data = {"screens": screens}
+                                    from steps import _clear_sidebar_keys
+                                    _clear_sidebar_keys()
                                     st.rerun()
                                 st.markdown("---")
         

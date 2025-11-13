@@ -4,6 +4,9 @@ Step functions for the AI Scenario Builder Tool workflow.
 import json
 import os
 import html
+import base64
+import io
+from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
 import openai
 from utils import get_existing_courses, get_existing_modules, save_to_json
@@ -24,6 +27,14 @@ def _sanitize_name(value, fallback):
     return cleaned or fallback
 
 
+def _clear_sidebar_keys():
+    """Clear sidebar widget keys to force sync with updated data"""
+    keys_to_clear = ["sidebar_scenario_edit", "sidebar_num_screens", "sidebar_aspect_ratio", 
+                     "sidebar_visual_style", "sidebar_screen_0_caption", "sidebar_screen_0_img"]
+    for key in list(st.session_state.keys()):
+        if key.startswith("sidebar_actor_") or key.startswith("sidebar_screen_") or key in keys_to_clear:
+            del st.session_state[key]
+
 def _get_text_output_dir():
     course_title = st.session_state.form_data["course"].get("course_title", "")
     module_title = st.session_state.form_data["project"].get("module_title", "")
@@ -43,12 +54,93 @@ def _persist_generated_images():
         json.dump(st.session_state.generated_images, f, indent=2)
 
 
-def _persist_final_slideshow(slides):
+def _save_composited_images(screens, images):
+    """Save images with caption overlays to a folder"""
     base_dir = _get_text_output_dir()
-    filepath = os.path.join(base_dir, "final_slideshow.json")
-    with open(filepath, "w") as f:
-        json.dump(slides, f, indent=2)
-    return filepath
+    output_folder = os.path.join(base_dir, "composited_screens")
+    os.makedirs(output_folder, exist_ok=True)
+    
+    for i, screen in enumerate(screens):
+        if i < len(images) and images[i].get("image_b64"):
+            try:
+                image_b64 = images[i].get("image_b64", "")
+                caption = screen.get("caption", "")
+                
+                img_data = base64.b64decode(image_b64)
+                img = Image.open(io.BytesIO(img_data))
+                draw = ImageDraw.Draw(img)
+                
+                if caption:
+                    width, height = img.size
+                    img_rgba = img.convert('RGBA')
+                    temp_draw = ImageDraw.Draw(img_rgba)
+                    
+                    try:
+                        font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 20)
+                    except:
+                        try:
+                            font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 20)
+                        except:
+                            try:
+                                font = ImageFont.truetype("arial.ttf", 20)
+                            except:
+                                font = ImageFont.load_default()
+                    
+                    max_box_width = int(width * 0.9) - 48
+                    words = caption.split()
+                    lines = []
+                    current_line = []
+                    for word in words:
+                        test_line = ' '.join(current_line + [word]) if current_line else word
+                        bbox = temp_draw.textbbox((0, 0), test_line, font=font)
+                        if bbox[2] - bbox[0] <= max_box_width:
+                            current_line.append(word)
+                        else:
+                            if current_line:
+                                lines.append(' '.join(current_line))
+                            current_line = [word]
+                    if current_line:
+                        lines.append(' '.join(current_line))
+                    
+                    line_height = int(temp_draw.textbbox((0, 0), "A", font=font)[3] - temp_draw.textbbox((0, 0), "A", font=font)[1])
+                    padding = 18
+                    text_widths = [temp_draw.textbbox((0, 0), line, font=font)[2] - temp_draw.textbbox((0, 0), line, font=font)[0] for line in lines]
+                    max_text_width = max(text_widths) if text_widths else 0
+                    box_width = max_text_width + padding * 2
+                    box_height = len(lines) * int(line_height * 1.4) + padding * 2
+                    
+                    box_left = (width - box_width) // 2
+                    box_right = box_left + box_width
+                    box_bottom = height - 24
+                    box_top = box_bottom - box_height
+                    radius = 14
+                    
+                    overlay = Image.new('RGBA', img.size, (255, 255, 255, 0))
+                    overlay_draw = ImageDraw.Draw(overlay)
+                    
+                    overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
+                                                   radius=radius, fill=(255, 255, 255, 240), 
+                                                   outline=(0, 0, 0, 30), width=1)
+                    
+                    img_rgba = Image.alpha_composite(img_rgba, overlay)
+                    draw = ImageDraw.Draw(img_rgba)
+                    
+                    start_y = box_top + padding
+                    for j, line in enumerate(lines):
+                        bbox = draw.textbbox((0, 0), line, font=font)
+                        text_width = bbox[2] - bbox[0]
+                        text_x = (width - text_width) // 2
+                        text_y = start_y + j * int(line_height * 1.4)
+                        draw.text((text_x, text_y), line, fill=(18, 18, 18), font=font)
+                    
+                    img = img_rgba.convert('RGB')
+                
+                output_path = os.path.join(output_folder, f"screen_{i+1}.png")
+                img.save(output_path, "PNG")
+            except Exception as e:
+                st.error(f"Error saving screen {i+1}: {str(e)}")
+    
+    return output_folder
 
 
 def generate_scenario_summaries_with_gpt(form_data, existing_scenario_data):
@@ -492,6 +584,7 @@ def step_scenario_generation():
             if st.button("Use Existing Scenario", type="primary"):
                 st.session_state.scenario_data = existing_scenario_data
                 st.session_state.scenarios_need_generation = False
+                _clear_sidebar_keys()
                 st.rerun()
         with col2:
             if st.button("Generate New Scenario", type="secondary"):
@@ -518,6 +611,7 @@ def step_scenario_generation():
                 st.session_state.scenario_data["generated_scenarios"] = scenarios
                 st.session_state.scenario_data["selected_scenario"] = None
                 st.session_state.scenarios_need_generation = False
+                _clear_sidebar_keys()
             except Exception as e:
                 st.error(f" Error generating scenarios: {str(e)}")
                 return
@@ -625,15 +719,9 @@ Scenarios should
 - Avoid jargon or overly academic phrasing.
 - Focus on what’s happening and why it matters — not on lengthy backstories or character details.
 
-Example response:
-Course: Social Media Platforms
-Learner Profile: Social Media Managers
-Module Description: Content Moderation
-Key Concept or Learning Objective: Understanding LLMs in content moderation
-Learners’ Existing Knowledge: Basic understanding of content moderation
-Additional Information: LLMs are becoming increasingly important in content moderation.
+**CRITICAL:** Your response must contain ONLY the scenario text. No prefixes, no labels, no metadata, no explanations - just the scenario itself.
 
-A suitable scenario summary could be:
+Example of correct format:
 safeChats is a fast-growing social media platform with active users worldwide. Their Trust and Safety team needs help strengthening content moderation systems and reducing costs. Currently, they use traditional sentiment analysis that flags posts as hate speech or not, but provides no explanations. Users complain about unfair flagging, and human reviewers spend extra time interpreting decisions. Their system also performs poorly in other languages. They're exploring Generative AI and LLMs because these can understand context, sarcasm, and nuance in multiple languages, explain reasoning in natural language, suggest better moderation responses, and continuously improve through feedback loops.
 """
                         client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -648,6 +736,8 @@ safeChats is a fast-growing social media platform with active users worldwide. T
                         )
                         updated_scenario = response.choices[0].message.content.strip()
                         st.session_state.scenario_data["generated_scenarios"][selected_scenario] = updated_scenario
+                        st.session_state.scenario_data["final_scenario"] = updated_scenario
+                        _clear_sidebar_keys()
                         st.success(" Scenario updated with AI!")
                         st.rerun()
                     except Exception as e:
@@ -674,6 +764,7 @@ safeChats is a fast-growing social media platform with active users worldwide. T
                 try:
                     # Save scenario data
                     st.session_state.scenario_data["final_scenario"] = edited_scenario
+                    _clear_sidebar_keys()
                     save_scenario_data(st.session_state.scenario_data, scenario_filepath)
                     
                     # Also save to scenario_descriptions.json
@@ -745,6 +836,7 @@ def step_scenario_metadata():
             if st.button("Use Existing Metadata", type="primary"):
                 st.session_state.metadata_data = existing_metadata
                 st.session_state.metadata_need_generation = False
+                _clear_sidebar_keys()
                 st.rerun()
         with col2:
             if st.button("Generate New Metadata", type="secondary"):
@@ -815,6 +907,7 @@ Output strictly in JSON format:
                     metadata = json.loads(json_match.group())
                     st.session_state.metadata_data = metadata
                     st.session_state.metadata_need_generation = False
+                    _clear_sidebar_keys()
                 else:
                     st.error("Failed to parse metadata")
             except Exception as e:
@@ -916,6 +1009,7 @@ Output strictly in JSON format:
                     "visual_style": visual_style,
                     "actors": edited_actors
                 })
+                _clear_sidebar_keys()
                 
                 # Save to file
                 course_title = st.session_state.form_data["course"].get("course_title", "")
@@ -1083,6 +1177,7 @@ A suitable response could be:
                     screen_data = json.loads(json_match.group())
                     st.session_state.screen_data = screen_data
                     st.session_state.screens_need_generation = False
+                    _clear_sidebar_keys()
                 else:
                     st.error("Failed to parse screen data")
             except Exception as e:
@@ -1094,10 +1189,10 @@ A suitable response could be:
     
     for i, screen in enumerate(screens):
         with st.expander(f"Screen {i+1}", expanded=True):
-            image_desc = st.text_area(f"Image Description", value=screen.get("image_description", ""), key=f"screen_{i}_img", height=100)
             caption = st.text_area(f"Caption", value=screen.get("caption", ""), key=f"screen_{i}_caption", height=80)
-            screens[i]["image_description"] = image_desc
+            image_desc = st.text_area(f"Image Description", value=screen.get("image_description", ""), key=f"screen_{i}_img", height=100)
             screens[i]["caption"] = caption
+            screens[i]["image_description"] = image_desc
     
     # Navigation
     st.markdown("---")
@@ -1121,6 +1216,7 @@ A suitable response could be:
                 with open(screens_filepath, 'w') as f:
                     json.dump(st.session_state.screen_data, f, indent=2)
                 
+                _clear_sidebar_keys()
                 st.success("Screens saved successfully!")
                 st.session_state.current_step = 6
                 st.rerun()
@@ -1148,6 +1244,7 @@ def step_image_generation():
     if images_ready:
         if st.button("Preview Final Slideshow", key="go_to_preview", type="primary"):
             st.session_state.preview_index = 0
+            st.session_state.should_save_composited = True
             st.session_state.current_step = 7
             st.rerun()
 
@@ -1201,33 +1298,61 @@ def step_image_generation():
             st.rerun()
         st.caption(f"Current: Screen {current_idx + 1} of {len(screens)}")
     with nav_cols[1]:
-        with st.expander("Prompting Tips", expanded=False):
+        with st.expander("Tips for Editing Image Prompts", expanded=False):
+            st.markdown(
+                """
+                <style>
+
+                /* Make entire expander border teal */
+                details {
+                    # border: 2px solid #00847F !important;
+                    border-radius: 6px !important;
+                    overflow: hidden;
+                }
+
+                /* Style the expander header bar */
+                details > summary {
+                    # background-color: #00847F !important;
+                    # color: white !important;
+                    # padding: 0.75rem !important;
+                    font-weight: 600 !important;
+                    list-style: none !important;
+                }
+
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
             st.markdown("""
-            **Character Diversity:**
-            - Ensure characters represent diverse ethnicities, genders, ages, and backgrounds
-            - Avoid stereotypes and ensure authentic representation
-            
-            **Visual Quality:**
-            - Use clear, specific visual descriptions (lighting, setting, mood)
-            - Avoid textual elements in images (no text, labels, or symbols)
-            
-            **Image Description Tips:**
-            - Describe the setting and atmosphere clearly
-            - Include relevant props and context that support the learning objective
-            - Avoid complex abstractions or metaphors that AI struggles to render
+            **Make characters feel real**
+
+            Include a mix of ages, genders, and ethnicities.
+
+            Describe people naturally and avoid stereotypes.
+
+            **Keep the visuals clear**
+
+            Mention lighting, mood, and the setting so the scene is easy to picture.
+
+            Avoid including text in images.
+
+            **Add useful context**
+
+            Describe where the scene takes place and what's happening.
+
+            Include relevant objects or details that support the learning goal.
+
+            **Avoid abstract ideas**
+
+            Stay away from metaphors or concepts that are difficult for AI to render literally.
             """)
+
     
     st.markdown("---")
     st.subheader(f"Screen {current_idx + 1} of {len(screens)}")
     
     # Allow editing before generation
-    edited_image_desc = st.text_area(
-        "Image Description",
-        value=current_screen.get("image_description", ""),
-        key=f"edit_img_desc_{current_idx}",
-        height=100
-    )
-    
     edited_caption = st.text_area(
         "Caption",
         value=current_screen.get("caption", ""),
@@ -1235,8 +1360,15 @@ def step_image_generation():
         height=80
     )
     
-    screens[current_idx]["image_description"] = edited_image_desc
+    edited_image_desc = st.text_area(
+        "Image Description",
+        value=current_screen.get("image_description", ""),
+        key=f"edit_img_desc_{current_idx}",
+        height=150
+    )
+    
     screens[current_idx]["caption"] = edited_caption
+    screens[current_idx]["image_description"] = edited_image_desc
     
     # Check if regeneration is needed
     needs_generation = current_idx >= len(st.session_state.generated_images) or not st.session_state.generated_images[current_idx].get("image_b64")
@@ -1400,7 +1532,7 @@ def step_image_generation():
 
 def step_final_preview():
     """Step 7: Review final images and captions in a slideshow."""
-    st.markdown('<div class="step-header">Final Image Slideshow</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Scene-by-Scene Preview</div>', unsafe_allow_html=True)
     
     screens = st.session_state.screen_data.get("screens", [])
     images = st.session_state.generated_images
@@ -1424,23 +1556,15 @@ def step_final_preview():
     caption = screens[idx].get("caption", "")
     image_b64 = images[idx].get("image_b64", "")
     image_data_uri = f"data:image/png;base64,{image_b64}" if image_b64 else ""
-    slides = [
-        {
-            "image_b64": images[i].get("image_b64", ""),
-            "caption": screens[i].get("caption", ""),
-            "screen_number": i + 1,
-        }
-        for i in range(len(screens))
-    ]
-    slideshow_path = _persist_final_slideshow(slides)
-    slideshow_abs = os.path.abspath(slideshow_path)
+    
+    if st.session_state.get("should_save_composited", False):
+        output_folder = _save_composited_images(screens, images)
+        st.session_state.should_save_composited = False
+        st.success(f"Composited screens saved to: {output_folder}")
 
-    st.info(
-        f"Final slideshow data is saved in `{slideshow_path}`. "
-        f"Primary captions and descriptions remain available in `screens.json`, and image data in `generated_images.json`."
+    st.markdown(
+        f"Captions and image descriptions remain available in `screens.json`. Right click and press 'Save Image As...' to save the image to your computer."
     )
-    st.markdown(f"[Open final_slideshow.json](vscode://file/{slideshow_abs})")
-
     st.markdown(f"Screen {idx + 1} of {len(screens)}")
 
     st.markdown(

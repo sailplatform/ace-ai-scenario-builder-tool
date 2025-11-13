@@ -1,0 +1,21 @@
+{
+  "course": {
+    "course_title": "AI Literacy for Automotive Industries",
+    "course_description": "Learners explore how modern AI systems enhance vehicle development, predictive maintenance, and safety workflows. ",
+    "course_objectives": ""
+  },
+  "project": {
+    "module_title": "Computer Vision",
+    "module_description": "",
+    "key_concept": "Learners should understand how AI systems identify defects on the assembly and and how to interpret system outputs responsibly during real-time inspection workflows.",
+    "existing_challenge": "They have basic familiarity with manual inspection processes, but they have limited experience interpreting AI outputs.",
+    "project_learning_objectives": ""
+  },
+  "audience": {
+    "professional_domain": "Automotive engineers",
+    "education_level": "undergrad_intro",
+    "prerequisites": "",
+    "class_size": 25
+  },
+  "additional_info": {}
+}

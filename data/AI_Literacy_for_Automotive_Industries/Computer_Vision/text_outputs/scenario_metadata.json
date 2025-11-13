@@ -1,0 +1,19 @@
+{
+  "num_screens": 5,
+  "aspect_ratio": "16:9",
+  "actors": [
+    {
+      "name": "Anika",
+      "role": "Quality Assurance Engineer",
+      "purpose": "Anika is tasked with mastering the interpretation of the AI system's confidence scores and heat maps to effectively prioritize defects for human intervention, aiming to maintain high quality standards without disrupting production flow.",
+      "appearance": "Mid-30s, South Asian ethnicity, female, with medium-length black hair often tied back in a low ponytail, wearing safety glasses and a lab coat with the Apex Motors logo."
+    },
+    {
+      "name": "Javier",
+      "role": "AI Specialist",
+      "purpose": "Javier assists Anika by providing expertise on the AI system's functionality and helps her understand the nuances of its output to make informed decisions on the production line.",
+      "appearance": "Early 40s, Latino ethnicity, male, with short, neatly combed hair, a trimmed beard, and wearing a smart casual shirt with the company's badge, often seen with a tablet in hand."
+    }
+  ],
+  "visual_style": "A vibrant, semi-realistic digital illustration in a modern vector art style, with soft gradients, clean lines, and cinematic lighting."
+}
