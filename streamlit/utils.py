@@ -48,7 +48,6 @@ def get_existing_courses():
 
 
 def get_existing_modules(course_name):
-    print(f"Getting existing modules for course: {course_name}")
     """Get list of existing modules for a given course"""
     modules = []
     course_name_clean = course_name.lower().replace(' ', '_')

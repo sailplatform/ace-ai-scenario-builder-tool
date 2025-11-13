@@ -1,0 +1,13 @@
+{
+  "num_screens": 5,
+  "aspect_ratio": "16:9",
+  "actors": [
+    {
+      "name": "Alex",
+      "role": "AI Engineer",
+      "purpose": "Alex is tasked with programming the AI of self-driving cars to handle unexpected obstacles, such as the crash-landed delivery drone, and to ensure the AI learns from these incidents to improve future performance. Alex's decisions directly affect how the car's AI will respond in critical situations, balancing safety with the need to adapt to new challenges.",
+      "appearance": "A mid-30s individual with an athletic build, East Asian ethnicity, short black hair, and glasses. Alex wears casual business attire, reflecting a blend of professional and tech-savvy attributes."
+    }
+  ],
+  "visual_style": "A vibrant, semi-realistic digital illustration in a modern vector art style, with soft gradients, clean lines, and cinematic lighting."
+}

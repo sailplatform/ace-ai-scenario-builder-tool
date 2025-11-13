@@ -1,0 +1,29 @@
+{
+  "screens": [
+    {
+      "screen_number": 1,
+      "image_description": "An AI engineer, identifiable by their casual tech company attire, stands in front of a large screen filled with code in a modern, well-lit office. The mood is focused and anticipatory. The engineer's expression shows concentration as they adjust parameters on the screen, with a miniature self-driving car model on the desk nearby, symbolizing the project's focus.",
+      "caption": "Alex, an AI engineer at AutoTech Innovations, is geared up to tackle a new challenge: fine-tuning the decision-making algorithms of self-driving cars for unexpected urban scenarios."
+    },
+    {
+      "screen_number": 2,
+      "image_description": "A simulated urban test environment is displayed across multiple monitors in a control center. Alex analyzes the simulation data with a puzzled expression as the AI-controlled car stops in front of a 3D-rendered drone, which has crash-landed on the virtual road. The atmosphere is tense, with a mix of warm and cool lighting highlighting the urgency of problem-solving.",
+      "caption": "During a test, the AI encounters an unforeseen obstacle: a delivery drone has crash-landed. Alex's expertise is now critical to navigate the vehicle safely around such unpredictable incidents."
+    },
+    {
+      "screen_number": 3,
+      "image_description": "In the climax of the scenario, Alex is seated at the workstation, hands poised above the keyboard, eyes locked on the screen showing a paused moment where the car must decide on a course of action. The lighting focuses on Alex, casting a spotlight effect that heightens the decision-making gravity. The background fades into a soft blur to emphasize the moment of critical choice.",
+      "caption": "It's a turning point for the AI: Alex must program split-second decisions to ensure safety and adaptability. The weight of the moment is palpable."
+    },
+    {
+      "screen_number": 4,
+      "image_description": "A relieved and satisfied Alex watches as the self-driving car successfully maneuvers around the virtual drone and continues on its simulated route. The monitors display the car's trajectory in green, signaling success. The office environment feels brighter and more relaxed now, with a sense of accomplishment emanating from Alex's body language.",
+      "caption": "The outcome is a success: Alex's programming enables the car to navigate safely around the obstacle, a testament to the skillful integration of human ingenuity and AI capability."
+    },
+    {
+      "screen_number": 5,
+      "image_description": "Alex stands with a group of colleagues around a glass table with the self-driving car model at the center. They're discussing animatedly, with gestures towards the car and smiles of achievement. The room is filled with natural light, and the ambience is one of teamwork and innovation.",
+      "caption": "The resolution is clear: through continuous learning and improvement, Alex and the team at AutoTech Innovations ensure that self-driving cars become smarter and safer with every test."
+    }
+  ]
+}

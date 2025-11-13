@@ -25,35 +25,33 @@ initialize_session_state()
 
 
 # Main app
-def main():
-    # Display header
+def main():    
     display_header()
-    
-    # Display progress
     display_progress()
-    
-    # Display optional details modal (persists through all steps)
-    display_optional_details_modal()
-    
-    # Route to appropriate step
+    # Handle Step 0 layout with logo column
     if st.session_state.current_step == 0:
-        step_initial_selection()
-    elif st.session_state.current_step == 0.5:
-        step_existing_content_selection()
-    elif st.session_state.current_step == 1:
-        step_project_setup()
-    elif st.session_state.current_step == 2:
-        step_review_export()
-    elif st.session_state.current_step == 3:
-        step_scenario_generation()
-    elif st.session_state.current_step == 4:
-        step_scenario_metadata()
-    elif st.session_state.current_step == 5:
-        step_screen_generation()
-    elif st.session_state.current_step == 6:
-        step_image_generation()
-    elif st.session_state.current_step == 7:
-        step_final_preview()
+            step_initial_selection()
+    else:
+        # Display optional details modal (persists through all steps)
+        display_optional_details_modal()
+        
+        # Route to appropriate step
+        if st.session_state.current_step == 0.5:
+            step_existing_content_selection()
+        elif st.session_state.current_step == 1:
+            step_project_setup()
+        elif st.session_state.current_step == 2:
+            step_review_export()
+        elif st.session_state.current_step == 3:
+            step_scenario_generation()
+        elif st.session_state.current_step == 4:
+            step_scenario_metadata()
+        elif st.session_state.current_step == 5:
+            step_screen_generation()
+        elif st.session_state.current_step == 6:
+            step_image_generation()
+        elif st.session_state.current_step == 7:
+            step_final_preview()
 
 if __name__ == "__main__":
     main()

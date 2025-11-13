@@ -174,8 +174,8 @@ safeChats is a fast-growing social media platform with active users worldwide. T
 
 def step_initial_selection():
     """Step 0: Initial Selection - Choose workflow mode"""
-    st.markdown('<div class="step-header">Welcome to AI Scenario Builder</div>', unsafe_allow_html=True)
-    st.markdown('<div class="step-description">Choose how you\'d like to start your project.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">Choose how you\'d like to start your project</div>', unsafe_allow_html=True)
+    # st.markdown('<div class="step-description">Choose how you\'d like to start your project.</div>', unsafe_allow_html=True)
     
     # Reset form data when returning to initial selection
     if st.session_state.workflow_mode is None or st.session_state.current_step == 0:
@@ -187,21 +187,18 @@ def step_initial_selection():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Create New Project")
-        st.markdown("Start from scratch with a new course and module.")
-        
+        st.markdown('<div class="step0-button">', unsafe_allow_html=True)
         if st.button("Create New Project", type="primary", use_container_width=True):
             st.session_state.workflow_mode = "new"
             st.session_state.form_data = get_default_form_data()
             st.session_state.current_step = 1
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.subheader(" Use Existing Content")
+        st.markdown('<div class="step0-button">', unsafe_allow_html=True)
         if existing_courses:
-            st.markdown("Build upon existing courses and modules.")
-            
-            if st.button("Use Existing Content", type="secondary", use_container_width=True):
+            if st.button("Use Existing Content", type="primary", use_container_width=True):
                 st.session_state.workflow_mode = "existing"
                 st.session_state.form_data = get_default_form_data()
                 st.session_state.current_step = 0.5  # Special step for existing content selection
@@ -209,6 +206,7 @@ def step_initial_selection():
         else:
             st.markdown("No existing courses found.")
             st.button("Use Existing Content", disabled=True, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Show existing courses if any
     if existing_courses:
@@ -253,6 +251,18 @@ def step_existing_content_selection():
         st.session_state.selected_module = None
 
     st.subheader("Course Selection")
+
+    st.markdown("""
+    <style>
+    /* Hide the search input inside the new Selectbox widget */
+    .stSelectbox [data-baseweb="select"] input {
+        opacity: 0 !important;         /* Hide text */
+        height: 0 !important;          /* Collapse visible height */
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+    }</style>
+    """, unsafe_allow_html=True)
     # Single key, no manual assignment after rendering
     st.selectbox(
         "Select Course",
@@ -260,7 +270,8 @@ def step_existing_content_selection():
         index=existing_courses.index(st.session_state.selected_course) if st.session_state.selected_course in existing_courses else 0,
         key="selected_course",
         on_change=_on_course_change,
-        help="Choose an existing course to build upon"
+        help="Choose an existing course to build upon",
+        disabled=False
     )
 
     # Modules depend on the current course
@@ -392,6 +403,12 @@ def step_project_setup():
                     "prerequisites": st.session_state.form_data["audience"].get("prerequisites", ""),
                     "class_size": st.session_state.form_data["audience"].get("class_size", 25)
                 }
+                # Clear modal widget keys to force them to sync with updated form_data
+                modal_keys = ["modal_professional_domain", "modal_course_description", "modal_key_concept", 
+                             "modal_existing_challenge", "optional_additional_info"]
+                for key in modal_keys:
+                    if key in st.session_state:
+                        del st.session_state[key]
                 st.session_state.current_step = 2
                 st.rerun()
             else:
@@ -460,8 +477,8 @@ def step_review_export():
 
 def step_scenario_generation():
     """Step 3: Generate Scenario Description and Image Vibe"""
-    st.markdown('<div class="step-header">Scenario Generation</div>', unsafe_allow_html=True)
-    st.markdown('<div class="step-description">Generate three scenario options using AI and select the best one for your project.</div>', unsafe_allow_html=True)
+    # st.markdown('<div class="step-header">Scenario Generation</div>', unsafe_allow_html=True)
+    # st.markdown('<div class="step-description">Generate three scenario options using AI and select the best one for your project.</div>', unsafe_allow_html=True)
     
     # Check if scenario data already exists
     scenario_filepath = get_scenario_filepath(st.session_state.form_data)
@@ -507,7 +524,7 @@ def step_scenario_generation():
     
     # Display the three scenario options
     st.subheader(" Choose Your Scenario")
-    st.markdown("Select one of the AI-generated scenarios below, or edit it to better fit your needs:")
+    st.markdown("Have three generated scenario options using AI and select the best one for your project. Then, edit it to better fit your needs:")
     
     scenarios = st.session_state.scenario_data.get("generated_scenarios", [])
     selected_scenario = st.session_state.scenario_data.get("selected_scenario", None)
@@ -516,21 +533,21 @@ def step_scenario_generation():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("**Scenario Option 1**")
+        # st.markdown("**Scenario Option 1**")
         if st.button("Select Option 1", key="select_1", type="primary" if selected_scenario == 0 else "secondary"):
             st.session_state.scenario_data["selected_scenario"] = 0
             st.rerun()
         st.info(scenarios[0] if len(scenarios) > 0 else "No scenario available")
     
     with col2:
-        st.markdown("**Scenario Option 2**")
+        # st.markdown("**Scenario Option 2**")
         if st.button("Select Option 2", key="select_2", type="primary" if selected_scenario == 1 else "secondary"):
             st.session_state.scenario_data["selected_scenario"] = 1
             st.rerun()
         st.info(scenarios[1] if len(scenarios) > 1 else "No scenario available")
     
     with col3:
-        st.markdown("**Scenario Option 3**")
+        # st.markdown("**Scenario Option 3**")
         if st.button("Select Option 3", key="select_3", type="primary" if selected_scenario == 2 else "secondary"):
             st.session_state.scenario_data["selected_scenario"] = 2
             st.rerun()
@@ -547,7 +564,7 @@ def step_scenario_generation():
         dynamic_height = min(max(130, approx_height), 240)   # cap reasonable max
 
         edited_scenario = st.text_area(
-            "Edit your scenario:",
+            "Edit your scenario directly:",
             value=scenario_text,
             height=dynamic_height,
             key="edit_scenario"
@@ -1124,7 +1141,7 @@ def step_image_generation():
         screens
         and len(generated_images) >= len(screens)
         and all(
-            generated_images[i].get("image_url")
+            generated_images[i].get("image_b64")
             for i in range(len(screens))
         )
     )
@@ -1167,7 +1184,6 @@ def step_image_generation():
     current_screen = screens[current_idx]
     
     # Navigation section - jump to any screen
-    st.markdown("---")
     st.subheader("Navigation")
     nav_cols = st.columns([0.5, 1])
     with nav_cols[0]:
@@ -1176,7 +1192,7 @@ def step_image_generation():
         selected_screen = st.radio(
             "Jump to Screen",
             options=all_screen_options,
-            format_func=lambda x: f"Screen {x + 1}" + (" (Generated)" if x < len(st.session_state.generated_images) and st.session_state.generated_images[x].get("image_url") else " (Not Generated)"),
+            format_func=lambda x: f"Screen {x + 1}" + (" (Generated)" if x < len(st.session_state.generated_images) and st.session_state.generated_images[x].get("image_b64") else " (Not Generated)"),
             index=current_idx,
             key="nav_radio_screen"
         )
@@ -1223,7 +1239,7 @@ def step_image_generation():
     screens[current_idx]["caption"] = edited_caption
     
     # Check if regeneration is needed
-    needs_generation = current_idx >= len(st.session_state.generated_images) or not st.session_state.generated_images[current_idx].get("image_url")
+    needs_generation = current_idx >= len(st.session_state.generated_images) or not st.session_state.generated_images[current_idx].get("image_b64")
     
     # Auto-regenerate if flag is set
     auto_regenerate = st.session_state.get("regenerate_image") == current_idx
@@ -1263,23 +1279,31 @@ def step_image_generation():
                     image_prompt = f"{edited_image_desc}{prev_context}{actor_context} Style: {visual_style}. Aspect ratio: {aspect_ratio}."
                     
                     response = client.images.generate(
-                        model="dall-e-3",
+                        model="gpt-image-1-mini",
                         prompt=image_prompt,
-                        size="1024x1024" if aspect_ratio == "1:1" else "1792x1024" if aspect_ratio == "16:9" else "1024x1792",
-                        quality="standard",
-                        n=1
+                        size=(
+                            "1024x1024" if aspect_ratio == "1:1" 
+                            else "1536x1024" if aspect_ratio == "16:9" 
+                            else "1024x1536"
+                        ),
                     )
-                    
-                    image_url = response.data[0].url
-                    
+
+                    # gpt-image-1-mini returns base64 in b64_json
+                    image_b64 = response.data[0].b64_json
+
+                    # Ensure the index exists inside the session list
                     if current_idx >= len(st.session_state.generated_images):
-                        st.session_state.generated_images.extend([{}] * (current_idx - len(st.session_state.generated_images) + 1))
-                    
+                        st.session_state.generated_images.extend(
+                            [{}] * (current_idx - len(st.session_state.generated_images) + 1)
+                        )
+
+                    # Store image metadata
                     st.session_state.generated_images[current_idx] = {
-                        "image_url": image_url,
+                        "image_b64": image_b64,
                         "accepted": False,
                         "screen_number": current_idx + 1
                     }
+
                     _persist_generated_images()
                     
                     st.rerun()
@@ -1296,64 +1320,35 @@ def step_image_generation():
     # else:
     #     st.info("Generate this screen's image to preview it here.")
 
-    all_generated = [(i, img) for i, img in enumerate(st.session_state.generated_images) if img.get("image_url")]
+    all_generated = [(i, img) for i, img in enumerate(st.session_state.generated_images) if img.get("image_b64")]
     if all_generated:
         st.markdown("---")
         st.subheader("All Generated Screens")
-        num_per_row = 3
+        num_per_row = 2
 
         for row_start in range(0, len(all_generated), num_per_row):
             row_items = all_generated[row_start:row_start + num_per_row]
-            cols = st.columns(len(row_items), gap="small")
+            cols = st.columns(2, gap="small")
 
             for idx, (orig_idx, img_data) in enumerate(row_items):
                 with cols[idx]:
                     is_current = orig_idx == current_idx
-
-                    # Column-scoped wrapper prevents overflow
-                    wrapper_style = (
-                        "width:100%; max-width:100%; overflow:hidden; "
-                        "border-radius:8px;"
-                    )
-                    img_style = (
-                        "display:block; width:100%; max-width:100%; height:auto; "
-                        "border-radius:8px;"
-                    )
+                    caption_text = screens[orig_idx].get("caption", "") if orig_idx < len(screens) else ""
+                    image_data_uri = f"data:image/png;base64,{img_data['image_b64']}"
+                    
+                    img_style = "display:block; width:100%; height:auto; border-radius:18px; object-fit:cover;"
                     if not is_current:
                         img_style += " filter:grayscale(65%) contrast(95%); opacity:0.75;"
 
                     st.markdown(
                         f"""
-                        <div style="{wrapper_style}">
-                        <img src="{html.escape(img_data['image_url'])}" style="{img_style}">
+                        <div style="position:relative; width:100%; margin-bottom:1rem;">
+                            <img src="{image_data_uri}" style="{img_style}">
+                            {f'<div style="position:absolute; left:12px; right:12px; bottom:12px; background:rgba(255,255,255,0.94); border-radius:8px; padding:8px 12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); font-size:0.75rem; line-height:1.4; color:#121212; max-height:40%; overflow:hidden;">{html.escape(caption_text)}</div>' if caption_text else ''}
                         </div>
                         """,
                         unsafe_allow_html=True,
                     )
-
-                    caption_text = screens[orig_idx].get("caption", "") if orig_idx < len(screens) else ""
-                    if caption_text:
-                        st.markdown(
-                            f"""
-                            <div style="
-                                margin-top:6px; font-size:0.8rem; line-height:1.3;
-                                color:#3a3a3a; text-align:left;
-                                max-width:100%; white-space:normal;
-                                word-break:break-word; overflow-wrap:anywhere;">
-                                {html.escape(caption_text)}
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-
-                    if st.button(
-                        f"Edit Screen {orig_idx + 1}",
-                        key=f"nav_btn_{orig_idx}",
-                        use_container_width=True,          # stays inside the column
-                        type="primary" if is_current else "secondary",
-                    ):
-                        st.session_state.current_image_index = orig_idx
-                        st.rerun()
     
     # Action buttons  
     st.markdown("---")
@@ -1366,7 +1361,7 @@ def step_image_generation():
     
     with col2:
         # Only show accept if image is generated
-        if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_url"):
+        if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_b64"):
             if st.button("Accept & Continue" if current_idx < len(screens) - 1 else " Accept & Finish", type="primary"):
                 try:
                     # Save screens with edits
@@ -1395,9 +1390,9 @@ def step_image_generation():
                     _persist_generated_images()
     
     with col3:
-        if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_url"):
+        if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_b64"):
             if st.button("Regenerate Image", type="secondary"):
-                st.session_state.generated_images[current_idx]["image_url"] = None
+                st.session_state.generated_images[current_idx]["image_b64"] = None
                 st.session_state.regenerate_image = current_idx
                 _persist_generated_images()
                 st.rerun()
@@ -1412,7 +1407,7 @@ def step_final_preview():
     ready = (
         screens
         and len(images) >= len(screens)
-        and all(images[i].get("image_url") for i in range(len(screens)))
+        and all(images[i].get("image_b64") for i in range(len(screens)))
     )
 
     if not ready:
@@ -1427,10 +1422,11 @@ def step_final_preview():
 
     idx = st.session_state.preview_index
     caption = screens[idx].get("caption", "")
-    image_url = images[idx].get("image_url", "")
+    image_b64 = images[idx].get("image_b64", "")
+    image_data_uri = f"data:image/png;base64,{image_b64}" if image_b64 else ""
     slides = [
         {
-            "image_url": images[i].get("image_url", ""),
+            "image_b64": images[i].get("image_b64", ""),
             "caption": screens[i].get("caption", ""),
             "screen_number": i + 1,
         }
@@ -1441,7 +1437,7 @@ def step_final_preview():
 
     st.info(
         f"Final slideshow data is saved in `{slideshow_path}`. "
-        f"Primary captions and descriptions remain available in `screens.json`, and image URLs in `generated_images.json`."
+        f"Primary captions and descriptions remain available in `screens.json`, and image data in `generated_images.json`."
     )
     st.markdown(f"[Open final_slideshow.json](vscode://file/{slideshow_abs})")
 
@@ -1450,7 +1446,7 @@ def step_final_preview():
     st.markdown(
         f"""
         <div style="position:relative; display:block; width:100%; max-width:960px; margin:0 auto;">
-            <img src="{html.escape(image_url)}" style="width:100%; border-radius:18px;">
+            <img src="{image_data_uri}" style="width:100%; border-radius:18px;">
             <div style="
                 position:absolute;
                 left:24px;
