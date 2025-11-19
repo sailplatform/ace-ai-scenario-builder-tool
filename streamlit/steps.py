@@ -30,7 +30,9 @@ def _sanitize_name(value, fallback):
 def _clear_sidebar_keys():
     """Clear sidebar widget keys to force sync with updated data"""
     keys_to_clear = ["sidebar_scenario_edit", "sidebar_num_screens", "sidebar_aspect_ratio", 
-                     "sidebar_visual_style", "sidebar_screen_0_caption", "sidebar_screen_0_img"]
+                     "sidebar_visual_style", "sidebar_screen_0_caption", "sidebar_screen_0_img",
+                     "modal_professional_domain", "modal_course_description", "modal_key_concept",
+                     "modal_existing_challenge", "optional_additional_info"]
     for key in list(st.session_state.keys()):
         if key.startswith("sidebar_actor_") or key.startswith("sidebar_screen_") or key in keys_to_clear:
             del st.session_state[key]
@@ -496,11 +498,7 @@ def step_project_setup():
                     "class_size": st.session_state.form_data["audience"].get("class_size", 25)
                 }
                 # Clear modal widget keys to force them to sync with updated form_data
-                modal_keys = ["modal_professional_domain", "modal_course_description", "modal_key_concept", 
-                             "modal_existing_challenge", "optional_additional_info"]
-                for key in modal_keys:
-                    if key in st.session_state:
-                        del st.session_state[key]
+                _clear_sidebar_keys()
                 st.session_state.current_step = 2
                 st.rerun()
             else:
@@ -508,6 +506,9 @@ def step_project_setup():
 
 def step_review_export():
     """Step 2: Review and Save Configuration"""
+    # Clear modal keys to ensure sidebar widgets sync with form_data
+    _clear_sidebar_keys()
+    
     st.markdown('<div class="step-header">Review & Save Configuration</div>', unsafe_allow_html=True)
     st.markdown('<div class="step-description">Review your information and save the configuration. Next, you\'ll generate AI-powered scenario descriptions for your project.</div>', unsafe_allow_html=True)
     
@@ -673,6 +674,7 @@ def step_scenario_generation():
         if edited_scenario != scenarios[selected_scenario]:
             st.session_state.scenario_data["generated_scenarios"][selected_scenario] = edited_scenario
             st.session_state.scenario_data["final_scenario"] = edited_scenario
+            _clear_sidebar_keys()
         
         # LLM-based editing
         update_instructions = st.text_area(

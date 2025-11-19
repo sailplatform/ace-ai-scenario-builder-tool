@@ -1,0 +1,21 @@
+{
+  "course": {
+    "course_title": "AI Literacy Education for Executives",
+    "course_description": "Online AI literacy course taught through interactive learning activities for executives at corporates.",
+    "course_objectives": ""
+  },
+  "project": {
+    "module_title": "Responsible AI",
+    "module_description": "",
+    "key_concept": "How AI should be used ethically and responsibly in corporate contexts, and what actions executives can take to ensure that.",
+    "existing_challenge": "Learners know about AI through news channels, through their own experiences of interacting with AI, social media, and so on. No formal AI literacy education",
+    "project_learning_objectives": ""
+  },
+  "audience": {
+    "professional_domain": "C-Suite Executives",
+    "education_level": "undergrad_intro",
+    "prerequisites": "",
+    "class_size": 25
+  },
+  "additional_info": {}
+}

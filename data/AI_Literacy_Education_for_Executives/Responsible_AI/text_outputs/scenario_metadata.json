@@ -1,0 +1,19 @@
+{
+  "num_screens": 5,
+  "aspect_ratio": "16:9",
+  "actors": [
+    {
+      "name": "Rajiv Singh",
+      "role": "CTO of MedInnovate",
+      "purpose": "Rajiv is presenting a new AI system to assist doctors with diagnosis and must address concerns about the AI's transparency and potential biases, with the goal of ensuring the AI meets ethical standards and is understandable and fair.",
+      "appearance": "Mid-40s, South Asian male with medium complexion, short black hair, and glasses. Dresses in smart business attire."
+    },
+    {
+      "name": "Dr. Angela Flores",
+      "role": "Chief Medical Officer",
+      "purpose": "Dr. Flores interacts with Rajiv by questioning the AI's decision-making process and highlighting the importance of addressing potential biases to prevent healthcare disparities, thereby pushing the conversation towards ethical AI implementation.",
+      "appearance": "Early 50s, Latina female with olive skin, shoulder-length brown hair with streaks of grey, often wearing a white lab coat over business casual clothing."
+    }
+  ],
+  "visual_style": "A vibrant, semi-realistic digital illustration in a modern vector art style, with soft gradients, clean lines, and cinematic lighting."
+}

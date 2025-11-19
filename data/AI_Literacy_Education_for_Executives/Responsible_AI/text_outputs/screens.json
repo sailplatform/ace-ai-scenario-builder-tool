@@ -1,0 +1,29 @@
+{
+  "screens": [
+    {
+      "screen_number": 1,
+      "image_description": "A modern, sleek boardroom with a large screen displaying an interface of the new AI system. Rajiv, the CTO, stands confidently at the head of the table, pointing to the screen while the executive team, including Dr. Angela Flores, watches attentively from their seats. The mood is one of anticipation and the lighting is bright, symbolizing the dawn of innovation.",
+      "caption": "In MedInnovate's boardroom, CTO Rajiv Singh unveils a cutting-edge AI to assist doctors, marking the beginning of a pivotal discussion on ethical AI use in healthcare."
+    },
+    {
+      "screen_number": 2,
+      "image_description": "The tension rises as Dr. Angela Flores leans forward, her brows furrowed in concern, questioning Rajiv who now appears concerned and thoughtful. The rest of the executive team appears engaged, with some taking notes. The lighting casts soft shadows, highlighting the faces and the serious tone of the conversation.",
+      "caption": "Dr. Angela Flores raises crucial questions about the AI's decision-making transparency and potential biases, challenging the team to consider the ethical implications."
+    },
+    {
+      "screen_number": 3,
+      "image_description": "The climax unfolds with Rajiv and Dr. Flores standing side by side in front of the boardroom's large screen. They are deep in discussion, pointing at various aspects of the AI interface. The other executives are turned towards them, their expressions a mix of curiosity and concern. The lighting is dynamic, focusing on the duo as they collaborate on the path forward.",
+      "caption": "At a critical juncture, Rajiv acknowledges the concerns and collaborates with Dr. Flores to seek solutions, demonstrating a commitment to ethical AI deployment."
+    },
+    {
+      "screen_number": 4,
+      "image_description": "The mood shifts as the executives, including Rajiv and Dr. Flores, gather around an open laptop, examining a new AI ethics framework document. The group appears more relaxed and optimistic, with some nodding in agreement. The lighting is warmer, symbolizing a positive turn towards resolution.",
+      "caption": "The MedInnovate team, united by their responsibility to ethical standards, begins outlining actionable steps to ensure their AI system is fair and transparent."
+    },
+    {
+      "screen_number": 5,
+      "image_description": "A resolution is depicted with Rajiv shaking hands with Dr. Flores, while the other executives applaud. The boardroom now feels energized with a sense of accomplishment. The large screen in the background displays the words 'Ethical AI Commitment' in bright, bold colors to underscore their pledge.",
+      "caption": "MedInnovate's executive team reaches a consensus, demonstrating how responsible AI governance can be achieved through collaborative leadership and ethical commitment."
+    }
+  ]
+}

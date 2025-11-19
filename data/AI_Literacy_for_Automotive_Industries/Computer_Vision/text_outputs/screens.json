@@ -2,28 +2,28 @@
   "screens": [
     {
       "screen_number": 1,
-      "image_description": "An engineer with a focused expression stands in front of a large, brightly lit assembly line in an automotive plant. Her eyes are fixed on a monitor displaying a slow-moving conveyor with car parts passing under an AI inspection camera. The environment is industrial and precise, with high-tech tools and safety equipment visible.",
-      "caption": "Anika, a dedicated quality assurance engineer at Apex Motors, observes the assembly line where an AI-powered computer vision system has just been implemented to detect defects."
+      "image_description": "An automotive factory line with robotic arms and car panels moving on the conveyor. Priya, a focused female engineer, is observing the assembly line while holding a tablet. The lighting is bright, and the mood is busy and industrial. She is surrounded by large monitors displaying vehicle finish inspections.",
+      "caption": "Priya, an automotive engineer, is determined to address the increasing customer complaints about vehicle finish quality at Autoline Manufacturing."
     },
     {
       "screen_number": 2,
-      "image_description": "The engineer is now pointing at the monitor with a puzzled look while discussing with a colleague. They are examining a colorful heat map on the screen that highlights potential defects on a car door panel. The surrounding area is busy with workers and robotic arms, but their attention is on the AI system's output.",
-      "caption": "Anika and Javier, an AI specialist, scrutinize the AI system's heat map, learning to interpret which highlighted areas signify actual defects needing human intervention."
+      "image_description": "Priya is in a meeting room with Carlos, a senior vehicle inspector. They're both looking at a screen showing an AI interface with highlighted sections on a digital image of a car panel. The room has a serious atmosphere, with the focus on collaboration between technology and expertise.",
+      "caption": "Priya collaborates with Carlos, leveraging his inspection experience to select the best AI system for detecting surface defects on car panels."
     },
     {
       "screen_number": 3,
-      "image_description": "In a moment of tension, the engineer leans closer to the screen, where a high-confidence score is flashing next to a specific defect on the heat map. Her colleague gestures towards the assembly line where the affected part is approaching a critical point.",
-      "caption": "Faced with a high-confidence alert from the AI, Anika must quickly decide whether to stop the assembly line and address the defect, balancing quality with production flow."
+      "image_description": "A close-up of Priya's hands as she configures the AI system on her tablet. The AI interface is visible, showing real-time feedback with annotations on car panel images. The environment is tense, symbolizing the critical decision-making in integrating AI with human judgment.",
+      "caption": "Priya faces the crucial task of calibrating the AI system to ensure its feedback is accurate and complements the human inspectors' nuanced decisions."
     },
     {
       "screen_number": 4,
-      "image_description": "The engineer confidently presses a button, and a robotic arm smoothly removes the defective part from the line. She and her colleague exchange satisfied nods as the line continues to run efficiently in the background.",
-      "caption": "Trusting her understanding of the AI system's confidence scores, Anika intervenes just in time, preventing a defective part from continuing down the line without disrupting production."
+      "image_description": "The assembly line again, but now with the AI system in action. A technician is inspecting a car panel with a defect highlighted by the AI on a monitor overhead. Priya and Carlos are in the background, watching carefully, analyzing the situation.",
+      "caption": "The AI system's real-time feedback highlights a defect on a car panel, and the technician's response to it will demonstrate if Priya's integration is a success."
     },
     {
       "screen_number": 5,
-      "image_description": "The engineer is now leading a small group of her peers in a well-lit training room, pointing to a simplified mock-up of the AI interface on a screen. Everyone is engaged, taking notes and asking questions. The mood is collaborative and empowered.",
-      "caption": "Anika shares her insights on interpreting AI outputs with her team, ensuring that Apex Motors maintains its high-quality standards through responsible real-time inspection workflows."
+      "image_description": "A celebration moment in the factory, with Priya and Carlos giving a thumbs-up to the team. The background shows a digital scoreboard with improved quality metrics. The factory is well-lit, and the mood is one of achievement and optimism.",
+      "caption": "Thanks to the responsible interpretation of the AI system outputs by the human inspectors, Autoline Manufacturing sees a significant improvement in vehicle finish quality."
     }
   ]
 }
