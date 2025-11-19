@@ -404,9 +404,8 @@ def step_existing_content_selection():
             
             course_name_clean = st.session_state.selected_course.lower().replace(' ', '_')
             module_name_clean = st.session_state.selected_module.lower().replace(' ', '_')
-            config_path = os.path.join(
-                "data", course_name_clean, module_name_clean, "text_outputs", "context.json"
-            )
+            base_path = os.path.join("data", course_name_clean, module_name_clean, "text_outputs")
+            config_path = os.path.join(base_path, "context.json")
 
             if os.path.exists(config_path):
                 try:
@@ -414,9 +413,55 @@ def step_existing_content_selection():
                         existing_data = json.load(f)
                     st.session_state.form_data = existing_data
                     st.session_state.workflow_mode = "existing_module"
-                    st.info(" Configuration loaded! Proceeding to scenario generation...")
-                    st.session_state.current_step = 3
-                    st.session_state.scenarios_need_generation = True
+                    
+                    # Detect last completed step based on files
+                    scenario_desc_path = os.path.join(base_path, "scenario_descriptions.json")
+                    metadata_path = os.path.join(base_path, "scenario_metadata.json")
+                    screens_path = os.path.join(base_path, "screens.json")
+                    images_path = os.path.join(base_path, "generated_images.json")
+                    composited_path = os.path.join(base_path, "composited_screens")
+                    
+                    if os.path.exists(composited_path) and os.path.isdir(composited_path) and os.listdir(composited_path):
+                        target_step = 7
+                    elif os.path.exists(images_path):
+                        target_step = 6
+                    elif os.path.exists(screens_path):
+                        target_step = 5
+                    elif os.path.exists(metadata_path):
+                        target_step = 4
+                    elif os.path.exists(scenario_desc_path):
+                        target_step = 3
+                    else:
+                        target_step = 2
+                    
+                    # Load existing data for the detected step
+                    if target_step >= 3 and os.path.exists(scenario_desc_path):
+                        with open(scenario_desc_path, 'r') as f:
+                            scenario_data = json.load(f)
+                            if "scenario_data" not in st.session_state:
+                                st.session_state.scenario_data = {}
+                            st.session_state.scenario_data["final_scenario"] = scenario_data.get("scenario_description", "")
+                            st.session_state.scenarios_need_generation = False
+                    
+                    if target_step >= 4 and os.path.exists(metadata_path):
+                        with open(metadata_path, 'r') as f:
+                            st.session_state.metadata_data = json.load(f)
+                            st.session_state.metadata_need_generation = False
+                    
+                    if target_step >= 5 and os.path.exists(screens_path):
+                        with open(screens_path, 'r') as f:
+                            st.session_state.screen_data = json.load(f)
+                            st.session_state.screens_need_generation = False
+                    
+                    if target_step >= 6:
+                        if os.path.exists(images_path):
+                            with open(images_path, 'r') as f:
+                                st.session_state.generated_images = json.load(f)
+                        else:
+                            st.session_state.generated_images = []
+                    
+                    st.session_state.current_step = target_step
+                    _clear_sidebar_keys()
                     st.rerun()
                 except Exception as e:
                     st.error(f" Could not load existing configuration: {str(e)}")
@@ -744,6 +789,8 @@ safeChats is a fast-growing social media platform with active users worldwide. T
                         updated_scenario = response.choices[0].message.content.strip()
                         st.session_state.scenario_data["generated_scenarios"][selected_scenario] = updated_scenario
                         st.session_state.scenario_data["final_scenario"] = updated_scenario
+                        if "edit_scenario" in st.session_state:
+                            del st.session_state["edit_scenario"]
                         _clear_sidebar_keys()
                         st.success(" Scenario updated with AI!")
                         st.rerun()
@@ -754,7 +801,8 @@ safeChats is a fast-growing social media platform with active users worldwide. T
         
         # Display final scenario
         st.subheader(" Final Scenario")
-        st.success(edited_scenario)
+        final_scenario_display = st.session_state.scenario_data.get("final_scenario", edited_scenario)
+        st.success(final_scenario_display)
     
     # Navigation buttons
     st.markdown("---")
@@ -1568,26 +1616,30 @@ def step_final_preview():
     st.markdown('<div class="step-header">Scene-by-Scene Preview</div>', unsafe_allow_html=True)
     
     screens = st.session_state.screen_data.get("screens", [])
-    images = st.session_state.generated_images
+    images = st.session_state.get("generated_images", [])
+    if not isinstance(images, list):
+        images = []
     ready = (
         screens
         and len(images) >= len(screens)
         and all(images[i].get("image_b64") for i in range(len(screens)))
     )
 
-    if not ready:
-        st.warning("Complete image generation for every screen before opening the slideshow.")
-        if st.button("Return to Image Generation", type="primary"):
-            st.session_state.current_step = 6
-            st.rerun()
-        return
+    # if not ready:
+    #     st.warning("Complete image generation for every screen before opening the slideshow.")
+    #     if st.button("Return to Image Generation", type="primary"):
+    #         st.session_state.current_step = 6
+    #         st.rerun()
+    #     return
 
     if "preview_index" not in st.session_state or st.session_state.preview_index >= len(screens):
         st.session_state.preview_index = 0
 
     idx = st.session_state.preview_index
     caption = screens[idx].get("caption", "")
-    image_b64 = images[idx].get("image_b64", "")
+    image_b64 = ""
+    if idx < len(images) and images[idx]:
+        image_b64 = images[idx].get("image_b64", "")
     image_data_uri = f"data:image/png;base64,{image_b64}" if image_b64 else ""
     
     if st.session_state.get("should_save_composited", False):

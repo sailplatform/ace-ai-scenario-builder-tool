@@ -306,17 +306,17 @@ def display_header():
 
 def display_optional_details_modal():
     """Display a persistent modal/dialog for optional project details"""
-    # Show logo in sidebar for step 1+
-    if st.session_state.current_step >= 1:
+    # Show logo in sidebar for step 2+
+    if st.session_state.current_step >= 2:
         with st.sidebar:
             st.image(str(LOGO_PATH), width=60)
             st.markdown("### Project Information")
-    elif st.session_state.current_step == 0:
-        # Logo is handled in app.py for Step 0
+    else:
+        # Logo is handled in app.py for Step 0 and 1
         return
     
     # Create a button in the sidebar or at the top
-    if st.session_state.current_step >= 1:
+    if st.session_state.current_step >= 2:
         with st.sidebar:
             # Fixed course and module titles at the top
             course_title_display = st.session_state.form_data["course"].get("course_title", "Not Set")
