@@ -322,8 +322,8 @@ def display_optional_details_modal():
             course_title_display = st.session_state.form_data["course"].get("course_title", "Not Set")
             module_title_display = st.session_state.form_data["project"].get("module_title", "Not Set")
             
-            st.markdown(f'<div class="info-box" style="margin-bottom: 0.5rem;"><strong>Course:</strong> {course_title_display}</div>', unsafe_allow_html=True, key="sidebar_course_display")
-            st.markdown(f'<div class="info-box" style="margin-bottom: 0.5rem;"><strong>Module:</strong> {module_title_display}</div>', unsafe_allow_html=True, key="sidebar_module_display")
+            st.text_input("Course", value=course_title_display, key="sidebar_course_display", disabled=True, label_visibility="visible")
+            st.text_input("Module", value=module_title_display, key="sidebar_module_display", disabled=True, label_visibility="visible")
             
             # Required Information Section
             with st.expander("Required Information", expanded=False):
