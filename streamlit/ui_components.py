@@ -310,6 +310,32 @@ def display_optional_details_modal():
     if st.session_state.current_step >= 2:
         with st.sidebar:
             st.image(str(LOGO_PATH), width=60)
+            
+            # Download all files button
+            try:
+                import zipfile
+                import io
+                import os as os_module
+                from steps import _get_text_output_dir
+                
+                base_dir = _get_text_output_dir()
+                if os_module.path.exists(base_dir):
+                    zip_buffer = io.BytesIO()
+                    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                        for root, dirs, files in os_module.walk(base_dir):
+                            for file in files:
+                                file_path = os_module.path.join(root, file)
+                                arcname = os_module.path.relpath(file_path, base_dir)
+                                zip_file.write(file_path, arcname)
+                    zip_buffer.seek(0)
+                    course_title = st.session_state.form_data["course"].get("course_title", "course")
+                    module_title = st.session_state.form_data["project"].get("module_title", "module")
+                    folder_name = f"{course_title}_{module_title}_all_files.zip".replace(" ", "_")
+                    st.download_button("Download All Files", zip_buffer.getvalue(), folder_name, "application/zip", use_container_width=True)
+            except Exception as e:
+                print("Error downloading all files: ", e)
+                pass
+            
             st.markdown("### Project Information")
     else:
         # Logo is handled in app.py for Step 0 and 1
