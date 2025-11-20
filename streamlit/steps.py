@@ -6,6 +6,7 @@ import os
 import html
 import base64
 import io
+import zipfile
 from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
 import openai
@@ -681,6 +682,8 @@ def step_scenario_generation():
         # st.markdown("**Scenario Option 1**")
         if st.button("Select Option 1", key="select_1", type="primary" if selected_scenario == 0 else "secondary"):
             st.session_state.scenario_data["selected_scenario"] = 0
+            st.session_state.scenario_data["final_scenario"] = scenarios[0] if len(scenarios) > 0 else ""
+            _clear_sidebar_keys()
             st.rerun()
         st.info(scenarios[0] if len(scenarios) > 0 else "No scenario available")
     
@@ -688,6 +691,8 @@ def step_scenario_generation():
         # st.markdown("**Scenario Option 2**")
         if st.button("Select Option 2", key="select_2", type="primary" if selected_scenario == 1 else "secondary"):
             st.session_state.scenario_data["selected_scenario"] = 1
+            st.session_state.scenario_data["final_scenario"] = scenarios[1] if len(scenarios) > 1 else ""
+            _clear_sidebar_keys()
             st.rerun()
         st.info(scenarios[1] if len(scenarios) > 1 else "No scenario available")
     
@@ -695,6 +700,8 @@ def step_scenario_generation():
         # st.markdown("**Scenario Option 3**")
         if st.button("Select Option 3", key="select_3", type="primary" if selected_scenario == 2 else "secondary"):
             st.session_state.scenario_data["selected_scenario"] = 2
+            st.session_state.scenario_data["final_scenario"] = scenarios[2] if len(scenarios) > 2 else ""
+            _clear_sidebar_keys()
             st.rerun()
         st.info(scenarios[2] if len(scenarios) > 2 else "No scenario available")
     
@@ -811,6 +818,7 @@ safeChats is a fast-growing social media platform with active users worldwide. T
     with col1:
         if st.button("← Back to Review", type="secondary"):
             st.session_state.current_step = 2
+            _clear_sidebar_keys()
             st.rerun()
     
     with col2:
@@ -1057,6 +1065,7 @@ Output strictly in JSON format:
     with col1:
         if st.button("← Back to Scenario", type="secondary"):
             st.session_state.current_step = 3
+            _clear_sidebar_keys()
             st.rerun()
     
     with col2:
@@ -1282,6 +1291,7 @@ A suitable response could be:
     with col1:
         if st.button("← Back to Metadata", type="secondary"):
             st.session_state.current_step = 4
+            _clear_sidebar_keys()
             st.rerun()
     
     with col2:
@@ -1568,8 +1578,9 @@ def step_image_generation():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("Previous", disabled=current_idx == 0, type="secondary"):
-            st.session_state.current_image_index = current_idx - 1
+        if st.button("← Back to Screens", type="secondary"):
+            st.session_state.current_step = 5
+            _clear_sidebar_keys()
             st.rerun()
     
     with col2:
@@ -1646,6 +1657,44 @@ def step_final_preview():
         output_folder = _save_composited_images(screens, images)
         st.session_state.should_save_composited = False
         st.success(f"Composited screens saved to: {output_folder}")
+    
+    # Download section
+    base_dir = _get_text_output_dir()
+    composited_folder = os.path.join(base_dir, "composited_screens")
+    screens_filepath = os.path.join(base_dir, "screens.json")
+    scenario_filepath = os.path.join(base_dir, "scenario_descriptions.json")
+    
+    st.markdown("---")
+    st.subheader("Download Files")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if os.path.exists(composited_folder) and os.path.isdir(composited_folder):
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                for root, dirs, files in os.walk(composited_folder):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, composited_folder)
+                        zip_file.write(file_path, arcname)
+            zip_buffer.seek(0)
+            st.download_button("Download Composited Screens", zip_buffer.getvalue(), "composited_screens.zip", "application/zip")
+
+    with col2:
+        if os.path.exists(base_dir):
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                for root, dirs, files in os.walk(base_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, base_dir)
+                        zip_file.write(file_path, arcname)
+            zip_buffer.seek(0)
+            course_title = st.session_state.form_data["course"].get("course_title", "course")
+            module_title = st.session_state.form_data["project"].get("module_title", "module")
+            folder_name = f"{course_title}_{module_title}_all_files.zip".replace(" ", "_")
+            st.download_button("Download All Files", zip_buffer.getvalue(), folder_name, "application/zip")
 
     st.markdown(
         f"Captions and image descriptions remain available in `screens.json`. Right click and press 'Save Image As...' to save the image to your computer."
