@@ -2,28 +2,32 @@
   "screens": [
     {
       "screen_number": 1,
-      "image_description": "A modern, sleek boardroom with a large screen displaying an interface of the new AI system. Rajiv, the CTO, stands confidently at the head of the table, pointing to the screen while the executive team, including Dr. Angela Flores, watches attentively from their seats. The mood is one of anticipation and the lighting is bright, symbolizing the dawn of innovation.",
-      "caption": "In MedInnovate's boardroom, CTO Rajiv Singh unveils a cutting-edge AI to assist doctors, marking the beginning of a pivotal discussion on ethical AI use in healthcare."
+      "image_description": "A corporate boardroom with a large oval table. Lydia Vasquez, the COO, is at the head of the table, her determined expression illuminated by the screen of a laptop showing an AI interface. The mood is anticipatory and professional, with natural light filtering through large windows.",
+      "caption": "Lydia Vasquez evaluates an AI-powered diagnostic tool that could revolutionize patient care at HealthBridge Pharmaceuticals."
     },
     {
       "screen_number": 2,
-      "image_description": "The tension rises as Dr. Angela Flores leans forward, her brows furrowed in concern, questioning Rajiv who now appears concerned and thoughtful. The rest of the executive team appears engaged, with some taking notes. The lighting casts soft shadows, highlighting the faces and the serious tone of the conversation.",
-      "caption": "Dr. Angela Flores raises crucial questions about the AI's decision-making transparency and potential biases, challenging the team to consider the ethical implications."
+      "image_description": "Rajiv Singh, the CTO of MedInnovate, stands beside a digital display with a 3D model of a human brain, making a presentation to the attentive executives. The room is bathed in soft blue light, emphasizing the technological focus and creating a sense of intrigue.",
+      "caption": "Rajiv presents the AI system with a focus on its potential, sparking a deeper conversation about the importance of ethical AI in healthcare."
     },
     {
       "screen_number": 3,
-      "image_description": "The climax unfolds with Rajiv and Dr. Flores standing side by side in front of the boardroom's large screen. They are deep in discussion, pointing at various aspects of the AI interface. The other executives are turned towards them, their expressions a mix of curiosity and concern. The lighting is dynamic, focusing on the duo as they collaborate on the path forward.",
-      "caption": "At a critical juncture, Rajiv acknowledges the concerns and collaborates with Dr. Flores to seek solutions, demonstrating a commitment to ethical AI deployment."
+      "image_description": "Dr. Angela Flores, the Chief Medical Officer, leans forward with a critical yet curious expression, pointing to a section of the AI interface as Rajiv listens intently. The interaction is intense, revealing the rising challenges of ensuring AI transparency and fairness.",
+      "caption": "Dr. Flores questions the AI's decision-making process, emphasizing the need to uncover and address any biases to uphold medical ethical standards."
     },
     {
       "screen_number": 4,
-      "image_description": "The mood shifts as the executives, including Rajiv and Dr. Flores, gather around an open laptop, examining a new AI ethics framework document. The group appears more relaxed and optimistic, with some nodding in agreement. The lighting is warmer, symbolizing a positive turn towards resolution.",
-      "caption": "The MedInnovate team, united by their responsibility to ethical standards, begins outlining actionable steps to ensure their AI system is fair and transparent."
+      "image_description": "A small group, including Lydia, Rajiv, and Dr. Flores, gathers around a table strewn with documents and digital tablets. There's a collaborative but serious atmosphere as they debate and draft a framework for the AI's ethical use.",
+      "caption": "The task force works together, combining their expertise to craft a framework that balances the benefits of AI with the imperative of maintaining patient trust."
     },
     {
       "screen_number": 5,
-      "image_description": "A resolution is depicted with Rajiv shaking hands with Dr. Flores, while the other executives applaud. The boardroom now feels energized with a sense of accomplishment. The large screen in the background displays the words 'Ethical AI Commitment' in bright, bold colors to underscore their pledge.",
-      "caption": "MedInnovate's executive team reaches a consensus, demonstrating how responsible AI governance can be achieved through collaborative leadership and ethical commitment."
+      "image_description": "Lydia stands by a window overlooking the city, reflecting on the task force's recommendations. The golden hour light casts a hopeful glow on her face, symbolizing the clarity and resolution achieved.",
+      "caption": "With a framework in place, Lydia is ready to lead HealthBridge Pharmaceuticals in rolling out AI that enhances patient outcomes while adhering to ethical standards."
     }
-  ]
+  ],
+  "interactive_element": {
+    "type": "MCQ",
+    "purpose": "The MCQ should test the learner's ability to apply the principles of ethical AI use in a corporate context, particularly in healthcare. It should challenge them to consider the balance between technological innovation and ethical responsibility, identify strategies for maintaining transparency and fairness, and recognize the importance of a multi-disciplinary approach in developing and implementing AI systems."
+  }
 }
