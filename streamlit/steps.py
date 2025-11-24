@@ -1318,6 +1318,63 @@ A suitable response could be:
 
     if "interactive_element" not in st.session_state:
         st.session_state.interactive_element = {"type": "MCQ", "purpose": ""}
+    
+    # Auto-generate purpose if empty and screens exist
+    if not st.session_state.interactive_element.get("purpose", "") and screens:
+        if "interactive_purpose_generating" not in st.session_state:
+            st.session_state.interactive_purpose_generating = True
+            with st.spinner("🤖 Generating MCQ purpose..."):
+                try:
+                    client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                    final_scenario = st.session_state.scenario_data.get("final_scenario", "")
+                    key_concept = st.session_state.form_data["project"].get("key_concept", "")
+                    screens_summary = "\n".join([f"Screen {s.get('screen_number', i+1)}: {s.get('caption', '')}" for i, s in enumerate(screens)])
+                    
+                    prompt = f"""
+You are a learning engineer support bot focused on creating top quality multiple-choice question assessments.
+
+Generate a concise description (1-2 sentences) for a multiple-choice question (MCQ) that will appear at the end of this learning scenario. This description will be used to guide the generation of the actual MCQ later.
+
+**Context:**
+Scenario: {final_scenario}
+Key Learning Objective: {key_concept}
+Screens Summary:
+{screens_summary}
+
+**MCQ Purpose Requirements:**
+The MCQ should:
+1. Tie together the key concepts from the entire scenario in a meaningful way
+2. Test understanding of the main learning objective: {key_concept}
+3. Be designed as a challenging but fair question that reinforces what learners should have learned
+4. Assess the learner's ability to apply the key concept in a new context or situation
+5. Align with appropriate Bloom's Taxonomy level (Remember, Understand, Apply, Analyze, Evaluate, or Create) based on the learning objective
+6. Focus on the stem (the question itself) which should clearly present the context and what is being assessed
+
+**Output Format:**
+Provide only a 1-2 sentence description of what the MCQ should test. Be specific about:
+- What knowledge or skill the question will assess
+- How it connects to the scenario and learning objective
+- The type of thinking or application required
+
+Example: "A question that tests the learner's ability to identify the most appropriate use of LLMs in content moderation by analyzing a new scenario and selecting the approach that best balances accuracy, transparency, and multilingual support, based on the principles demonstrated throughout the safeChats case study."
+"""
+                    response = client.chat.completions.create(
+                        model="gpt-4-1106-preview",
+                        messages=[
+                            {"role": "system", "content": "You are an expert instructional designer. Generate concise, clear descriptions for MCQ purposes."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        max_tokens=150,
+                        temperature=0.7
+                    )
+                    generated_purpose = response.choices[0].message.content.strip()
+                    st.session_state.interactive_element["purpose"] = generated_purpose
+                    st.session_state.interactive_purpose_generating = False
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error generating MCQ purpose: {str(e)}")
+                    st.session_state.interactive_purpose_generating = False
+    
     interactive_purpose = st.text_area(
         "What should the MCQ be about? Describe the purpose and content:",
         value=st.session_state.interactive_element.get("purpose", ""),
@@ -1581,13 +1638,10 @@ def step_image_generation():
 You are a learning engineer support bot focused on creating top quality multiple-choice question assessments.
 
 A multiple-choice question is a collection of three components aimed at testing a student's understanding of a certain topic, given a particular context of what the student is expected to know. The topic, as well as the context of the topic, will be provided in order to generate effective multiple-choice questions. The three components of a multiple-choice question are as follows: a Stem, a Correct Answer, and two Distractors. There must always be only one correct answer and only two distractors.
-
 The stem refers to the question the student will attempt to answer, as well as the relevant context necessary in order to answer the question. It may be in the form of a question, an incomplete statement, or a scenario. The stem should focus on assessing the specific knowledge or concept the question aims to evaluate.
-
 The Correct Answer refers to the correct, undisputable answer to the question in the stem. Avoid overly long sentences (more than 10 words) when generating the correct answer.
 
 A Distractor is an incorrect answer to the question in the stem and adheres to the following properties.
-
 1. A distractor should not be obviously wrong. In other words, it must still bear relations to the stem and correct answer. 
 2. A distractor should be phrased positively and be a true statement that does not correctly answer the stem, all while giving no clues towards the correct answer.
 3. Although a distractor is incorrect, it must be plausible: in other words, it must be positioned such that a student who does not fully grasp the topic may believe that the distractor is the correct answer choice. Later provided with the topic and context students will be assessed on is a list of common misconceptions within that topic. Please generate the distractors such that a student with any of these misconceptions may believe the distractor is the correct response to the stem, if possible. 
@@ -1596,7 +1650,6 @@ A Distractor is an incorrect answer to the question in the stem and adheres to t
 The term "answer choices" is a phrase that refers to a grouping of the two distractors as well as the correct answer. A single "answer choice" refers to only one of the distractors or the correct answer. The answer choices should be homogeneous and parallel in format, such that they are of similar length and structure. After the stem has been generated, be sure to list the answer choices in alphabetical order.
 Use "None of the Above" or "All of the Above" style answer choices sparingly. These answer choices have been shown to, in general, be less effective at measuring or assessing student understanding. 
 Multiple-choice questions should be clear, concise, and grammatically correct statements. Make sure the questions are worded in a way that is easy to understand and does not introduce unnecessary complexity or ambiguity. Students should be able to understand the questions without confusion. The question should not be too long, and allow most students to finish in less than five minutes. This means adhering to the following properties.
-
 1. Avoid using overly long sentences.
 2. Avoid code that is longer than 20 lines for questions, and longer than 10 lines for the correct answer and distractors. 
 3. If you refer to the same item or activity multiple times, use the same phrase each time.
@@ -1605,9 +1658,7 @@ Multiple-choice questions should be clear, concise, and grammatically correct st
 6. Avoid too many clues. Do not include too many clues or hints in the answer options, which may make it too obvious for students to determine the correct answer. These options should require students to use their knowledge and reasoning to make an informed choice.
 
 Keep in mind that the Correct Answer and the distractors must resemble each other in word length.
-
 You may be told by the user to consider implementing stacking into some of the multiple-choice questions to increase difficulty. Stacking is the practice of implementing multiple subtopics into a question, such that the question still addresses a main topic, but will require a sufficient understanding of the subtopics to correctly answer. To do this, when you are given a topic and the context a student should have of that topic, consider picking subtopics out of that context in order to successfully use stacking. Stacking should be used moderately, such that the generated multiple-choice questions can be good indicators of student understanding.
-
 Blooms' Taxonomy and Action Verbs:
 
 Multiple-choice questions must be well aligned to the learning objectives they are intended to assess students' knowledge on. This implies that they must assess skills at the right cognitive level corresponding to the Bloom's taxonomy categorization of the learning objective. Bloom's Taxonomy offers a framework for categorizing the depth of learning, and it provides guidance on selecting appropriate action verbs when writing learning objectives. Here are the six levels of Bloom's taxonomy and their definitions:
