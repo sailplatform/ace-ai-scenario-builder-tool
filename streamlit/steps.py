@@ -451,8 +451,15 @@ def step_existing_content_selection():
                     
                     if target_step >= 5 and os.path.exists(screens_path):
                         with open(screens_path, 'r') as f:
-                            st.session_state.screen_data = json.load(f)
+                            screen_data = json.load(f)
+                            st.session_state.screen_data = screen_data
                             st.session_state.screens_need_generation = False
+                            # Load interactive element if it exists
+                            if "interactive_element" in screen_data:
+                                st.session_state.interactive_element = screen_data["interactive_element"]
+                            # Load interactive_mcq if it exists in screen_data
+                            if "interactive_mcq" in screen_data:
+                                st.session_state.interactive_mcq = screen_data["interactive_mcq"]
                     
                     if target_step >= 6:
                         if os.path.exists(images_path):
@@ -1405,6 +1412,22 @@ def step_image_generation():
     last_image_idx = len(screens) - 1
     last_image_generated = last_image_idx >= 0 and last_image_idx < len(st.session_state.generated_images) and st.session_state.generated_images[last_image_idx].get("image_b64")
     
+    # Load interactive_mcq from screens.json if it exists and hasn't been loaded yet
+    if interactive_available and last_image_generated and "interactive_mcq" not in st.session_state:
+        try:
+            course_title = st.session_state.form_data["course"].get("course_title", "")
+            module_title = st.session_state.form_data["project"].get("module_title", "")
+            course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+            module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+            screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+            if os.path.exists(screens_filepath):
+                with open(screens_filepath, 'r') as f:
+                    screen_data = json.load(f)
+                if "interactive_mcq" in screen_data:
+                    st.session_state.interactive_mcq = screen_data["interactive_mcq"]
+        except Exception as e:
+            pass  # Don't fail if load doesn't work
+    
     
     if isinstance(current_idx, int) and current_idx >= len(screens):
         st.success("All images generated successfully!")
@@ -1427,7 +1450,28 @@ def step_image_generation():
     with nav_cols[0]:
         all_options = list(range(len(screens)))
         # Add Interactive Element option if last image is generated
-        if interactive_available and last_image_generated:
+        # Check if interactive element exists in screens.json even if not in session state
+        interactive_exists_in_file = False
+        if last_image_generated:
+            try:
+                course_title = st.session_state.form_data["course"].get("course_title", "")
+                module_title = st.session_state.form_data["project"].get("module_title", "")
+                course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+                if os.path.exists(screens_filepath):
+                    with open(screens_filepath, 'r') as f:
+                        screen_data = json.load(f)
+                    if "interactive_element" in screen_data or "interactive_mcq" in screen_data:
+                        interactive_exists_in_file = True
+                        # Load interactive_element if not in session state
+                        if "interactive_element" in screen_data and "interactive_element" not in st.session_state:
+                            st.session_state.interactive_element = screen_data["interactive_element"]
+            except Exception as e:
+                pass
+        
+        # Show interactive element if last image is generated (regardless of purpose, since user might want to generate it)
+        if last_image_generated and (interactive_available or interactive_exists_in_file or "interactive_mcq" in st.session_state):
             all_options.append("interactive")
         
         def format_option(x):
@@ -1534,18 +1578,51 @@ def step_image_generation():
                         interactive_purpose = st.session_state.get("interactive_element", {}).get("purpose", "")
                         
                         prompt = f"""
-Create a multiple choice question (MCQ) that ties together the entire scenario and tests understanding of the key learning objective.
+You are a learning engineer support bot focused on creating top quality multiple-choice question assessments.
+
+A multiple-choice question is a collection of three components aimed at testing a student's understanding of a certain topic, given a particular context of what the student is expected to know. The topic, as well as the context of the topic, will be provided in order to generate effective multiple-choice questions. The three components of a multiple-choice question are as follows: a Stem, a Correct Answer, and two Distractors. There must always be only one correct answer and only two distractors.
+
+The stem refers to the question the student will attempt to answer, as well as the relevant context necessary in order to answer the question. It may be in the form of a question, an incomplete statement, or a scenario. The stem should focus on assessing the specific knowledge or concept the question aims to evaluate.
+
+The Correct Answer refers to the correct, undisputable answer to the question in the stem. Avoid overly long sentences (more than 10 words) when generating the correct answer.
+
+A Distractor is an incorrect answer to the question in the stem and adheres to the following properties.
+
+1. A distractor should not be obviously wrong. In other words, it must still bear relations to the stem and correct answer. 
+2. A distractor should be phrased positively and be a true statement that does not correctly answer the stem, all while giving no clues towards the correct answer.
+3. Although a distractor is incorrect, it must be plausible: in other words, it must be positioned such that a student who does not fully grasp the topic may believe that the distractor is the correct answer choice. Later provided with the topic and context students will be assessed on is a list of common misconceptions within that topic. Please generate the distractors such that a student with any of these misconceptions may believe the distractor is the correct response to the stem, if possible. 
+4. A distractor must be incorrect. It cannot be correct, or interpreted as correct by someone who strongly grasps the topic.
+
+The term "answer choices" is a phrase that refers to a grouping of the two distractors as well as the correct answer. A single "answer choice" refers to only one of the distractors or the correct answer. The answer choices should be homogeneous and parallel in format, such that they are of similar length and structure. After the stem has been generated, be sure to list the answer choices in alphabetical order.
+Use "None of the Above" or "All of the Above" style answer choices sparingly. These answer choices have been shown to, in general, be less effective at measuring or assessing student understanding. 
+Multiple-choice questions should be clear, concise, and grammatically correct statements. Make sure the questions are worded in a way that is easy to understand and does not introduce unnecessary complexity or ambiguity. Students should be able to understand the questions without confusion. The question should not be too long, and allow most students to finish in less than five minutes. This means adhering to the following properties.
+
+1. Avoid using overly long sentences.
+2. Avoid code that is longer than 20 lines for questions, and longer than 10 lines for the correct answer and distractors. 
+3. If you refer to the same item or activity multiple times, use the same phrase each time.
+4. Ensure that each multiple-choice question provides full context. In other words, if a phrase or action is not part of the provided topic or topic context that a student is expected to know, then be sure to explain it briefly or consider not including it.
+5. Ensure that none of the distractors overlap. In other words, attempt to make each distractor reflect a different misconception on the topic, rather than a single one, if possible.
+6. Avoid too many clues. Do not include too many clues or hints in the answer options, which may make it too obvious for students to determine the correct answer. These options should require students to use their knowledge and reasoning to make an informed choice.
+
+Keep in mind that the Correct Answer and the distractors must resemble each other in word length.
+
+You may be told by the user to consider implementing stacking into some of the multiple-choice questions to increase difficulty. Stacking is the practice of implementing multiple subtopics into a question, such that the question still addresses a main topic, but will require a sufficient understanding of the subtopics to correctly answer. To do this, when you are given a topic and the context a student should have of that topic, consider picking subtopics out of that context in order to successfully use stacking. Stacking should be used moderately, such that the generated multiple-choice questions can be good indicators of student understanding.
+
+Blooms' Taxonomy and Action Verbs:
+
+Multiple-choice questions must be well aligned to the learning objectives they are intended to assess students' knowledge on. This implies that they must assess skills at the right cognitive level corresponding to the Bloom's taxonomy categorization of the learning objective. Bloom's Taxonomy offers a framework for categorizing the depth of learning, and it provides guidance on selecting appropriate action verbs when writing learning objectives. Here are the six levels of Bloom's taxonomy and their definitions:
+- Remember - This level involves retrieving, recognizing, and recalling relevant knowledge from long-term memory.
+- Understand - At this level, learners construct meaning from oral, written, and graphic messages through interpreting, exemplifying, classifying, summarizing, inferring, comparing, and explaining.
+- Apply - This level requires learners to carry out or use a procedure through executing or implementing it.
+- Analyze - At this level, learners break material into constituent parts, determine how the parts relate to one another and to an overall structure or purpose through differentiating, organizing, and attributing.
+- Evaluate - This level involves making judgments based on criteria and standards through checking and critiquing.
+- Create - At this level, learners put elements together to form a coherent or functional whole, or they reorganize elements into a new pattern or structure through generating, planning, or producing.
+
+Now, generate a multiple choice question that ties together the entire scenario and tests understanding of the key learning objective.
 
 Scenario: {final_scenario}
 Key Concept: {key_concept}
 Purpose: {interactive_purpose}
-
-The MCQ should:
-1. Be directly related to the scenario and test understanding of the key concept
-2. Have 4 answer options (A, B, C, D)
-3. Have one clearly correct answer
-4. Have plausible distractors that relate to the scenario
-5. Be challenging but fair
 
 Format as JSON:
 {{
@@ -1595,19 +1672,6 @@ Format as JSON:
             
             draw = ImageDraw.Draw(img_rgba)
             width, height = img.size
-            box_width = int(width * 0.85)
-            box_height = int(height * 0.65)
-            box_left = (width - box_width) // 2
-            box_top = (height - box_height) // 2
-            box_right = box_left + box_width
-            box_bottom = box_top + box_height
-            
-            overlay_box = PILImage.new('RGBA', img.size, (255, 255, 255, 0))
-            overlay_draw = ImageDraw.Draw(overlay_box)
-            overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
-                                           radius=20, fill=(255, 255, 255, 255))
-            img_rgba = PILImage.alpha_composite(img_rgba, overlay_box)
-            draw = ImageDraw.Draw(img_rgba)
             
             try:
                 font_large = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 22)
@@ -1633,9 +1697,65 @@ Format as JSON:
                     lines.append(' '.join(current_line))
                 return lines
             
-            max_text_width = box_width - 60
+            # Calculate text dimensions first to size the box
+            max_text_width_estimate = int(width * 0.7)  # Start with estimate
+            question_lines = wrap_text(mcq["question"], font_large, max_text_width_estimate)
+            
+            # Calculate question height
+            question_height = 0
+            max_question_width = 0
+            for line in question_lines:
+                bbox = draw.textbbox((0, 0), line, font=font_large)
+                line_width = bbox[2] - bbox[0]
+                line_height = bbox[3] - bbox[1]
+                question_height += int(line_height * 1.3)
+                max_question_width = max(max_question_width, line_width)
+            
+            # Calculate options height and width
+            options_height = 0
+            max_option_width = 0
+            for opt_key in ["A", "B", "C", "D"]:
+                opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                opt_lines = wrap_text(opt_text, font_medium, max_text_width_estimate - 20)
+                for line in opt_lines:
+                    bbox = draw.textbbox((0, 0), line, font=font_medium)
+                    line_width = bbox[2] - bbox[0]
+                    line_height = bbox[3] - bbox[1]
+                    options_height += int(line_height * 1.2)
+                    max_option_width = max(max_option_width, line_width + 30)  # +30 for left padding
+                options_height += 10  # Spacing between options
+            
+            # Calculate total content dimensions
+            total_text_width = max(max_question_width, max_option_width)
+            total_text_height = question_height + 20 + options_height  # 20 for spacing between question and options
+            
+            # Set box dimensions with padding (40px on each side, 30px top/bottom)
+            padding_horizontal = 40
+            padding_vertical = 30
+            box_width = total_text_width + (padding_horizontal * 2)
+            box_height = total_text_height + (padding_vertical * 2)
+            
+            # Ensure box doesn't exceed image dimensions
+            box_width = min(box_width, int(width * 0.9))
+            box_height = min(box_height, int(height * 0.8))
+            
+            # Center the box
+            box_left = (width - box_width) // 2
+            box_top = (height - box_height) // 2
+            box_right = box_left + box_width
+            box_bottom = box_top + box_height
+            
+            overlay_box = PILImage.new('RGBA', img.size, (255, 255, 255, 0))
+            overlay_draw = ImageDraw.Draw(overlay_box)
+            overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
+                                           radius=20, fill=(255, 255, 255, 255))
+            img_rgba = PILImage.alpha_composite(img_rgba, overlay_box)
+            draw = ImageDraw.Draw(img_rgba)
+            
+            # Now draw the text with the calculated box
+            max_text_width = box_width - (padding_horizontal * 2)
             question_lines = wrap_text(mcq["question"], font_large, max_text_width)
-            question_y = box_top + 25
+            question_y = box_top + padding_vertical
             for line in question_lines:
                 bbox = draw.textbbox((0, 0), line, font=font_large)
                 text_width = bbox[2] - bbox[0]
@@ -1648,7 +1768,7 @@ Format as JSON:
                 opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
                 opt_lines = wrap_text(opt_text, font_medium, max_text_width - 20)
                 for line in opt_lines:
-                    draw.text((box_left + 30, option_y), line, fill=(0, 0, 0), font=font_medium)
+                    draw.text((box_left + padding_horizontal, option_y), line, fill=(0, 0, 0), font=font_medium)
                     bbox = draw.textbbox((0, 0), line, font=font_medium)
                     option_y += int((bbox[3] - bbox[1]) * 1.2)
                 option_y += 10
@@ -1668,6 +1788,22 @@ Format as JSON:
             if st.button("Regenerate MCQ", type="secondary", use_container_width=True):
                 if "interactive_mcq" in st.session_state:
                     del st.session_state["interactive_mcq"]
+                    # Remove from screens.json as well
+                    try:
+                        course_title = st.session_state.form_data["course"].get("course_title", "")
+                        module_title = st.session_state.form_data["project"].get("module_title", "")
+                        course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                        module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                        screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+                        if os.path.exists(screens_filepath):
+                            with open(screens_filepath, 'r') as f:
+                                screen_data = json.load(f)
+                            if "interactive_mcq" in screen_data:
+                                del screen_data["interactive_mcq"]
+                            with open(screens_filepath, 'w') as f:
+                                json.dump(screen_data, f, indent=2)
+                    except Exception as e:
+                        pass  # Don't fail if save doesn't work
                 st.rerun()
         
         return
@@ -1818,19 +1954,6 @@ Format as JSON:
                             
                             draw = ImageDraw.Draw(img_rgba)
                             width, height = img.size
-                            box_width = int(width * 0.85)
-                            box_height = int(height * 0.65)
-                            box_left = (width - box_width) // 2
-                            box_top = (height - box_height) // 2
-                            box_right = box_left + box_width
-                            box_bottom = box_top + box_height
-                            
-                            overlay_box = PILImage.new('RGBA', img.size, (255, 255, 255, 0))
-                            overlay_draw = ImageDraw.Draw(overlay_box)
-                            overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
-                                                           radius=20, fill=(255, 255, 255, 255))
-                            img_rgba = PILImage.alpha_composite(img_rgba, overlay_box)
-                            draw = ImageDraw.Draw(img_rgba)
                             
                             try:
                                 font_large = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 22)
@@ -1856,9 +1979,65 @@ Format as JSON:
                                     lines.append(' '.join(current_line))
                                 return lines
                             
-                            max_text_width = box_width - 60
+                            # Calculate text dimensions first to size the box
+                            max_text_width_estimate = int(width * 0.7)  # Start with estimate
+                            question_lines = wrap_text(mcq["question"], font_large, max_text_width_estimate)
+                            
+                            # Calculate question height
+                            question_height = 0
+                            max_question_width = 0
+                            for line in question_lines:
+                                bbox = draw.textbbox((0, 0), line, font=font_large)
+                                line_width = bbox[2] - bbox[0]
+                                line_height = bbox[3] - bbox[1]
+                                question_height += int(line_height * 1.3)
+                                max_question_width = max(max_question_width, line_width)
+                            
+                            # Calculate options height and width
+                            options_height = 0
+                            max_option_width = 0
+                            for opt_key in ["A", "B", "C", "D"]:
+                                opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                                opt_lines = wrap_text(opt_text, font_medium, max_text_width_estimate - 20)
+                                for line in opt_lines:
+                                    bbox = draw.textbbox((0, 0), line, font=font_medium)
+                                    line_width = bbox[2] - bbox[0]
+                                    line_height = bbox[3] - bbox[1]
+                                    options_height += int(line_height * 1.2)
+                                    max_option_width = max(max_option_width, line_width + 30)  # +30 for left padding
+                                options_height += 10  # Spacing between options
+                            
+                            # Calculate total content dimensions
+                            total_text_width = max(max_question_width, max_option_width)
+                            total_text_height = question_height + 20 + options_height  # 20 for spacing between question and options
+                            
+                            # Set box dimensions with padding (40px on each side, 30px top/bottom)
+                            padding_horizontal = 40
+                            padding_vertical = 30
+                            box_width = total_text_width + (padding_horizontal * 2)
+                            box_height = total_text_height + (padding_vertical * 2)
+                            
+                            # Ensure box doesn't exceed image dimensions
+                            box_width = min(box_width, int(width * 0.9))
+                            box_height = min(box_height, int(height * 0.8))
+                            
+                            # Center the box
+                            box_left = (width - box_width) // 2
+                            box_top = (height - box_height) // 2
+                            box_right = box_left + box_width
+                            box_bottom = box_top + box_height
+                            
+                            overlay_box = PILImage.new('RGBA', img.size, (255, 255, 255, 0))
+                            overlay_draw = ImageDraw.Draw(overlay_box)
+                            overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
+                                                           radius=20, fill=(255, 255, 255, 255))
+                            img_rgba = PILImage.alpha_composite(img_rgba, overlay_box)
+                            draw = ImageDraw.Draw(img_rgba)
+                            
+                            # Now draw the text with the calculated box
+                            max_text_width = box_width - (padding_horizontal * 2)
                             question_lines = wrap_text(mcq["question"], font_large, max_text_width)
-                            question_y = box_top + 25
+                            question_y = box_top + padding_vertical
                             for line in question_lines:
                                 bbox = draw.textbbox((0, 0), line, font=font_large)
                                 text_width = bbox[2] - bbox[0]
@@ -1871,7 +2050,7 @@ Format as JSON:
                                 opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
                                 opt_lines = wrap_text(opt_text, font_medium, max_text_width - 20)
                                 for line in opt_lines:
-                                    draw.text((box_left + 30, option_y), line, fill=(0, 0, 0), font=font_medium)
+                                    draw.text((box_left + padding_horizontal, option_y), line, fill=(0, 0, 0), font=font_medium)
                                     bbox = draw.textbbox((0, 0), line, font=font_medium)
                                     option_y += int((bbox[3] - bbox[1]) * 1.2)
                                 option_y += 10
@@ -2025,20 +2204,6 @@ def step_final_preview():
                     # Draw white box with MCQ
                     draw = ImageDraw.Draw(img_rgba)
                     width, height = img.size
-                    box_width = int(width * 0.8)
-                    box_height = int(height * 0.6)
-                    box_left = (width - box_width) // 2
-                    box_top = (height - box_height) // 2
-                    box_right = box_left + box_width
-                    box_bottom = box_top + box_height
-                    
-                    # Draw rounded rectangle
-                    overlay_box = PILImage.new('RGBA', img.size, (255, 255, 255, 0))
-                    overlay_draw = ImageDraw.Draw(overlay_box)
-                    overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
-                                                   radius=20, fill=(255, 255, 255, 255))
-                    img_rgba = PILImage.alpha_composite(img_rgba, overlay_box)
-                    draw = ImageDraw.Draw(img_rgba)
                     
                     # Draw text with wrapping
                     try:
@@ -2065,10 +2230,66 @@ def step_final_preview():
                             lines.append(' '.join(current_line))
                         return lines
                     
-                    # Question with wrapping
-                    max_text_width = box_width - 60
+                    # Calculate text dimensions first to size the box
+                    max_text_width_estimate = int(width * 0.7)  # Start with estimate
+                    question_lines = wrap_text(mcq["question"], font_large, max_text_width_estimate)
+                    
+                    # Calculate question height
+                    question_height = 0
+                    max_question_width = 0
+                    for line in question_lines:
+                        bbox = draw.textbbox((0, 0), line, font=font_large)
+                        line_width = bbox[2] - bbox[0]
+                        line_height = bbox[3] - bbox[1]
+                        question_height += int(line_height * 1.3)
+                        max_question_width = max(max_question_width, line_width)
+                    
+                    # Calculate options height and width
+                    options_height = 0
+                    max_option_width = 0
+                    for opt_key in ["A", "B", "C", "D"]:
+                        opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                        opt_lines = wrap_text(opt_text, font_medium, max_text_width_estimate - 20)
+                        for line in opt_lines:
+                            bbox = draw.textbbox((0, 0), line, font=font_medium)
+                            line_width = bbox[2] - bbox[0]
+                            line_height = bbox[3] - bbox[1]
+                            options_height += int(line_height * 1.2)
+                            max_option_width = max(max_option_width, line_width + 30)  # +30 for left padding
+                        options_height += 10  # Spacing between options
+                    
+                    # Calculate total content dimensions
+                    total_text_width = max(max_question_width, max_option_width)
+                    total_text_height = question_height + 20 + options_height  # 20 for spacing between question and options
+                    
+                    # Set box dimensions with padding (40px on each side, 30px top/bottom)
+                    padding_horizontal = 40
+                    padding_vertical = 30
+                    box_width = total_text_width + (padding_horizontal * 2)
+                    box_height = total_text_height + (padding_vertical * 2)
+                    
+                    # Ensure box doesn't exceed image dimensions
+                    box_width = min(box_width, int(width * 0.9))
+                    box_height = min(box_height, int(height * 0.8))
+                    
+                    # Center the box
+                    box_left = (width - box_width) // 2
+                    box_top = (height - box_height) // 2
+                    box_right = box_left + box_width
+                    box_bottom = box_top + box_height
+                    
+                    # Draw rounded rectangle
+                    overlay_box = PILImage.new('RGBA', img.size, (255, 255, 255, 0))
+                    overlay_draw = ImageDraw.Draw(overlay_box)
+                    overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
+                                                   radius=20, fill=(255, 255, 255, 255))
+                    img_rgba = PILImage.alpha_composite(img_rgba, overlay_box)
+                    draw = ImageDraw.Draw(img_rgba)
+                    
+                    # Now draw the text with the calculated box
+                    max_text_width = box_width - (padding_horizontal * 2)
                     question_lines = wrap_text(mcq["question"], font_large, max_text_width)
-                    question_y = box_top + 25
+                    question_y = box_top + padding_vertical
                     for line in question_lines:
                         bbox = draw.textbbox((0, 0), line, font=font_large)
                         text_width = bbox[2] - bbox[0]
@@ -2082,7 +2303,7 @@ def step_final_preview():
                         opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
                         opt_lines = wrap_text(opt_text, font_medium, max_text_width - 20)
                         for line in opt_lines:
-                            draw.text((box_left + 30, option_y), line, fill=(0, 0, 0), font=font_medium)
+                            draw.text((box_left + padding_horizontal, option_y), line, fill=(0, 0, 0), font=font_medium)
                             bbox = draw.textbbox((0, 0), line, font=font_medium)
                             option_y += int((bbox[3] - bbox[1]) * 1.2)
                         option_y += 10
