@@ -289,7 +289,7 @@ def display_header():
         st.markdown(
             """
             <div class="ace-header-text" style="text-align: center;">
-                <div class="title"><span style="color: var(--deep-black);">Ace-AI</span> <span style="color: var(--carnegie-red);">Scenario Builder</span></div>
+                <div class="title"><span style="color: var(--deep-black);">Ace-AI</span> <span style="color: var(--carnegie-red);">Content Creation Tool</span></div>
             </div>
             """,
             unsafe_allow_html=True,

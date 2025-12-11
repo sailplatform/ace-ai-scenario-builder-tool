@@ -2,32 +2,48 @@
   "screens": [
     {
       "screen_number": 1,
-      "image_description": "A corporate boardroom with a large oval table. Lydia Vasquez, the COO, is at the head of the table, her determined expression illuminated by the screen of a laptop showing an AI interface. The mood is anticipatory and professional, with natural light filtering through large windows.",
-      "caption": "Lydia Vasquez evaluates an AI-powered diagnostic tool that could revolutionize patient care at HealthBridge Pharmaceuticals."
+      "image_description": "A panoramic office scene with floor-to-ceiling windows overlooking a bustling cityscape at dusk. Luisa, a professional executive with a concerned expression, stands next to a large digital screen showing a map with uneven stock distribution across neighborhoods. The room's ambient lighting casts a serious tone, highlighting the gravity of the discovery.",
+      "caption": "Luisa Rodriguez, COO of QuickBuy, uncovers a troubling ethical issue: their AI system is causing inventory disparities that could deepen socioeconomic divides."
     },
     {
       "screen_number": 2,
-      "image_description": "Rajiv Singh, the CTO of MedInnovate, stands beside a digital display with a 3D model of a human brain, making a presentation to the attentive executives. The room is bathed in soft blue light, emphasizing the technological focus and creating a sense of intrigue.",
-      "caption": "Rajiv presents the AI system with a focus on its potential, sparking a deeper conversation about the importance of ethical AI in healthcare."
+      "image_description": "A tense meeting room environment where Luisa is seated at the head of a long conference table, surrounded by executives and data analysts. Charts and data projections are scattered across the table. The team is engaged in a heated discussion, with some members gesturing towards the data, reflecting the rising action of addressing the AI's bias.",
+      "caption": "Luisa gathers her team to confront the challenge head-on, sparking a debate on balancing technological efficiency with social responsibility."
     },
     {
       "screen_number": 3,
-      "image_description": "Dr. Angela Flores, the Chief Medical Officer, leans forward with a critical yet curious expression, pointing to a section of the AI interface as Rajiv listens intently. The interaction is intense, revealing the rising challenges of ensuring AI transparency and fairness.",
-      "caption": "Dr. Flores questions the AI's decision-making process, emphasizing the need to uncover and address any biases to uphold medical ethical standards."
+      "image_description": "A pivotal moment at QuickBuy's data center, where Luisa, alongside Jordan, the AI Ethics Consultant, is examining the AI system's code on multiple monitors. They both show focused expressions, with Jordan pointing out a section of the code. The atmosphere is intense, with dim overhead lights casting shadows over their workspace.",
+      "caption": "In the story's climax, Luisa and Jordan collaborate to identify the source of the AI's bias, poised to make a critical decision on recalibrating the system."
     },
     {
       "screen_number": 4,
-      "image_description": "A small group, including Lydia, Rajiv, and Dr. Flores, gathers around a table strewn with documents and digital tablets. There's a collaborative but serious atmosphere as they debate and draft a framework for the AI's ethical use.",
-      "caption": "The task force works together, combining their expertise to craft a framework that balances the benefits of AI with the imperative of maintaining patient trust."
+      "image_description": "An image of Luisa presenting the recalibrated AI system to a diverse group of community representatives. She's using an interactive display that now shows a more balanced stock distribution. The room is bright and hopeful, with natural light streaming in, symbolizing a new start and the positive outcome of ethical actions.",
+      "caption": "The recalibrated AI system reveals more equitable stock levels, demonstrating Luisa's commitment to ethical AI and the company's dedication to fairness."
     },
     {
       "screen_number": 5,
-      "image_description": "Lydia stands by a window overlooking the city, reflecting on the task force's recommendations. The golden hour light casts a hopeful glow on her face, symbolizing the clarity and resolution achieved.",
-      "caption": "With a framework in place, Lydia is ready to lead HealthBridge Pharmaceuticals in rolling out AI that enhances patient outcomes while adhering to ethical standards."
+      "image_description": "A reinvigorated office scene where Luisa inaugurates QuickBuy's new Ethical AI Review Board. A diverse team gathers around a table with a sign reading 'Ethics in AI'. The setting is professional and collaborative, with soft lighting that creates an optimistic mood, emphasizing the resolution and ongoing commitment.",
+      "caption": "Luisa's establishment of an ongoing ethical AI review process marks a new chapter for QuickBuy, reinforcing the necessity of responsible AI governance in corporate contexts."
     }
   ],
+  "interactive_mcq": {
+    "question": "As COO of QuickBuy, Luisa Rodriguez identifies that their AI inventory management system is biased, affecting stock levels across neighborhoods. What is the most appropriate action for her to ensure the ethical and responsible use of AI?",
+    "options": {
+      "A": "Implement a task force to recalibrate the AI system and establish ongoing ethical oversight",
+      "B": "Increase advertising efforts in diverse neighborhoods to improve the company's image",
+      "C": "Offer discounts to customers in understocked areas to compensate for the inventory disparities",
+      "D": "Temporarily halt the use of all AI systems within the company until a solution is found"
+    },
+    "correct_answer": "A",
+    "feedback": {
+      "A": "This is correct because it directly addresses the bias in the AI system and ensures responsible AI use through continual ethical oversight, aligning with the key concept of ethical AI governance.",
+      "B": "This is incorrect because it addresses the company's image superficially and does not resolve the underlying ethical issue with the AI system.",
+      "C": "This is incorrect because offering discounts does not address the cause of the bias within the AI system and fails to ensure responsible AI use in the long term.",
+      "D": "This is incorrect because halting all AI systems is an extreme measure that does not directly address the recalibration of the specific biased AI system or the establishment of an ethical oversight process."
+    }
+  },
   "interactive_element": {
     "type": "MCQ",
-    "purpose": "AI Executives"
+    "purpose": "A question that assesses the learner's ability to evaluate a hypothetical scenario where an executive must address an AI system's discriminatory impact on product availability, by choosing an action plan that reflects ethical considerations and aligns with the principles of responsible AI governance as demonstrated by Luisa Rodriguez in the QuickBuy case study."
   }
 }
