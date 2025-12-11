@@ -59,3 +59,48 @@ def get_existing_modules(course_name):
             if os.path.isdir(item_path):
                 modules.append(item.replace('_', ' ').title())
     return sorted(modules)
+
+
+def save_scenario_data(scenario_data, filepath):
+    """
+    Save scenario data to JSON file.
+    """
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    
+    # Save to JSON
+    with open(filepath, 'w') as f:
+        json.dump(scenario_data, f, indent=2)
+    
+    return filepath
+
+
+def load_scenario_data(filepath):
+    """
+    Load scenario data from JSON file.
+    """
+    if os.path.exists(filepath):
+        with open(filepath, 'r') as f:
+            return json.load(f)
+    return {}
+
+
+def get_scenario_filepath(form_data):
+    """
+    Get the filepath for scenario data based on course and module information.
+    """
+    course_title = form_data["course"].get("course_title", "unknown_course")
+    module_title = form_data["project"].get("module_title", "unknown_module")
+    
+    # Clean names for directory structure
+    course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+    module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+    
+    # Create filepath
+    base_path = "data"
+    course_path = os.path.join(base_path, course_name)
+    module_path = os.path.join(course_path, module_name)
+    text_outputs_path = os.path.join(module_path, "text_outputs")
+    filename = "scenario_descriptions.json"
+    
+    return os.path.join(text_outputs_path, filename)

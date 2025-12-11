@@ -10,17 +10,8 @@ import zipfile
 from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
 import openai
-from utils import get_existing_courses, get_existing_modules, save_to_json
+from utils import get_existing_courses, get_existing_modules, save_to_json, save_scenario_data, load_scenario_data, get_scenario_filepath
 from config import get_default_form_data
-from scenario_writer import (
-    generate_scenario_description,
-    generate_image_vibe,
-    generate_initial_screens,
-    generate_image_description_from_caption,
-    save_scenario_data,
-    load_scenario_data,
-    get_scenario_filepath
-)
 
 
 def _sanitize_name(value, fallback):

@@ -29,13 +29,6 @@ def get_default_form_data():
     }
 
 
-def reset_session_state():
-    """Reset session state to initial values"""
-    st.session_state.current_step = 0
-    st.session_state.workflow_mode = None
-    st.session_state.form_data = get_default_form_data()
-
-
 def get_page_config():
     """Return Streamlit page configuration"""
     return {

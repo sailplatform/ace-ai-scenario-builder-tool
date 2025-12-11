@@ -23,7 +23,6 @@ st.markdown(get_custom_css(), unsafe_allow_html=True)
 # Initialize session state
 initialize_session_state()
 
-
 # Main app
 def main():    
     display_header()
