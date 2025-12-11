@@ -3,16 +3,16 @@
   "aspect_ratio": "16:9",
   "actors": [
     {
-      "name": "Rajiv Singh",
-      "role": "CTO of MedInnovate",
-      "purpose": "Rajiv is presenting a new AI system to assist doctors with diagnosis and must address concerns about the AI's transparency and potential biases, with the goal of ensuring the AI meets ethical standards and is understandable and fair.",
-      "appearance": "Mid-40s, South Asian male with medium complexion, short black hair, and glasses. Dresses in smart business attire."
+      "name": "Luisa Rodriguez",
+      "role": "COO of QuickBuy",
+      "purpose": "Luisa is tasked with addressing the ethical issue of the biased AI inventory management system. Her objective is to recalibrate the AI to ensure fair stock levels across all neighborhoods and establish an ethical oversight process. Her decision-making context involves balancing technological efficiency with social responsibility and company reputation.",
+      "appearance": "Mid-40s, Latina, female, professional attire, with distinctive glasses that highlight her analytical nature."
     },
     {
-      "name": "Dr. Angela Flores",
-      "role": "Chief Medical Officer",
-      "purpose": "Dr. Flores interacts with Rajiv by questioning the AI's decision-making process and highlighting the importance of addressing potential biases to prevent healthcare disparities, thereby pushing the conversation towards ethical AI implementation.",
-      "appearance": "Early 50s, Latina female with olive skin, shoulder-length brown hair with streaks of grey, often wearing a white lab coat over business casual clothing."
+      "name": "Jordan Taylor",
+      "role": "AI Ethics Consultant",
+      "purpose": "Jordan collaborates with Luisa to provide expertise on responsible AI practices. Their insights help inform Luisa's strategy for recalibrating the AI system and setting up a review process for ethical oversight.",
+      "appearance": "Early 30s, African American, non-binary, with a modern business-casual style, often seen with a notepad or tablet for taking notes during consultations."
     }
   ],
   "visual_style": "A vibrant, semi-realistic digital illustration in a modern vector art style, with soft gradients, clean lines, and cinematic lighting."

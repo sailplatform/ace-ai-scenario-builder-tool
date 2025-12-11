@@ -2,28 +2,48 @@
   "screens": [
     {
       "screen_number": 1,
-      "image_description": "A modern, sleek boardroom with a large screen displaying an interface of the new AI system. Rajiv, the CTO, stands confidently at the head of the table, pointing to the screen while the executive team, including Dr. Angela Flores, watches attentively from their seats. The mood is one of anticipation and the lighting is bright, symbolizing the dawn of innovation.",
-      "caption": "In MedInnovate's boardroom, CTO Rajiv Singh unveils a cutting-edge AI to assist doctors, marking the beginning of a pivotal discussion on ethical AI use in healthcare."
+      "image_description": "A panoramic office scene with floor-to-ceiling windows overlooking a bustling cityscape at dusk. Luisa, a professional executive with a concerned expression, stands next to a large digital screen showing a map with uneven stock distribution across neighborhoods. The room's ambient lighting casts a serious tone, highlighting the gravity of the discovery.",
+      "caption": "Luisa Rodriguez, COO of QuickBuy, uncovers a troubling ethical issue: their AI system is causing inventory disparities that could deepen socioeconomic divides."
     },
     {
       "screen_number": 2,
-      "image_description": "The tension rises as Dr. Angela Flores leans forward, her brows furrowed in concern, questioning Rajiv who now appears concerned and thoughtful. The rest of the executive team appears engaged, with some taking notes. The lighting casts soft shadows, highlighting the faces and the serious tone of the conversation.",
-      "caption": "Dr. Angela Flores raises crucial questions about the AI's decision-making transparency and potential biases, challenging the team to consider the ethical implications."
+      "image_description": "A tense meeting room environment where Luisa is seated at the head of a long conference table, surrounded by executives and data analysts. Charts and data projections are scattered across the table. The team is engaged in a heated discussion, with some members gesturing towards the data, reflecting the rising action of addressing the AI's bias.",
+      "caption": "Luisa gathers her team to confront the challenge head-on, sparking a debate on balancing technological efficiency with social responsibility."
     },
     {
       "screen_number": 3,
-      "image_description": "The climax unfolds with Rajiv and Dr. Flores standing side by side in front of the boardroom's large screen. They are deep in discussion, pointing at various aspects of the AI interface. The other executives are turned towards them, their expressions a mix of curiosity and concern. The lighting is dynamic, focusing on the duo as they collaborate on the path forward.",
-      "caption": "At a critical juncture, Rajiv acknowledges the concerns and collaborates with Dr. Flores to seek solutions, demonstrating a commitment to ethical AI deployment."
+      "image_description": "A pivotal moment at QuickBuy's data center, where Luisa, alongside Jordan, the AI Ethics Consultant, is examining the AI system's code on multiple monitors. They both show focused expressions, with Jordan pointing out a section of the code. The atmosphere is intense, with dim overhead lights casting shadows over their workspace.",
+      "caption": "In the story's climax, Luisa and Jordan collaborate to identify the source of the AI's bias, poised to make a critical decision on recalibrating the system."
     },
     {
       "screen_number": 4,
-      "image_description": "The mood shifts as the executives, including Rajiv and Dr. Flores, gather around an open laptop, examining a new AI ethics framework document. The group appears more relaxed and optimistic, with some nodding in agreement. The lighting is warmer, symbolizing a positive turn towards resolution.",
-      "caption": "The MedInnovate team, united by their responsibility to ethical standards, begins outlining actionable steps to ensure their AI system is fair and transparent."
+      "image_description": "An image of Luisa presenting the recalibrated AI system to a diverse group of community representatives. She's using an interactive display that now shows a more balanced stock distribution. The room is bright and hopeful, with natural light streaming in, symbolizing a new start and the positive outcome of ethical actions.",
+      "caption": "The recalibrated AI system reveals more equitable stock levels, demonstrating Luisa's commitment to ethical AI and the company's dedication to fairness."
     },
     {
       "screen_number": 5,
-      "image_description": "A resolution is depicted with Rajiv shaking hands with Dr. Flores, while the other executives applaud. The boardroom now feels energized with a sense of accomplishment. The large screen in the background displays the words 'Ethical AI Commitment' in bright, bold colors to underscore their pledge.",
-      "caption": "MedInnovate's executive team reaches a consensus, demonstrating how responsible AI governance can be achieved through collaborative leadership and ethical commitment."
+      "image_description": "A reinvigorated office scene where Luisa inaugurates QuickBuy's new Ethical AI Review Board. A diverse team gathers around a table with a sign reading 'Ethics in AI'. The setting is professional and collaborative, with soft lighting that creates an optimistic mood, emphasizing the resolution and ongoing commitment.",
+      "caption": "Luisa's establishment of an ongoing ethical AI review process marks a new chapter for QuickBuy, reinforcing the necessity of responsible AI governance in corporate contexts."
     }
-  ]
+  ],
+  "interactive_mcq": {
+    "question": "As COO of QuickBuy, Luisa Rodriguez identifies that their AI inventory management system is biased, affecting stock levels across neighborhoods. What is the most appropriate action for her to ensure the ethical and responsible use of AI?",
+    "options": {
+      "A": "Implement a task force to recalibrate the AI system and establish ongoing ethical oversight",
+      "B": "Increase advertising efforts in diverse neighborhoods to improve the company's image",
+      "C": "Offer discounts to customers in understocked areas to compensate for the inventory disparities",
+      "D": "Temporarily halt the use of all AI systems within the company until a solution is found"
+    },
+    "correct_answer": "A",
+    "feedback": {
+      "A": "This is correct because it directly addresses the bias in the AI system and ensures responsible AI use through continual ethical oversight, aligning with the key concept of ethical AI governance.",
+      "B": "This is incorrect because it addresses the company's image superficially and does not resolve the underlying ethical issue with the AI system.",
+      "C": "This is incorrect because offering discounts does not address the cause of the bias within the AI system and fails to ensure responsible AI use in the long term.",
+      "D": "This is incorrect because halting all AI systems is an extreme measure that does not directly address the recalibration of the specific biased AI system or the establishment of an ethical oversight process."
+    }
+  },
+  "interactive_element": {
+    "type": "MCQ",
+    "purpose": "A question that assesses the learner's ability to evaluate a hypothetical scenario where an executive must address an AI system's discriminatory impact on product availability, by choosing an action plan that reflects ethical considerations and aligns with the principles of responsible AI governance as demonstrated by Luisa Rodriguez in the QuickBuy case study."
+  }
 }

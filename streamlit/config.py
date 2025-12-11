@@ -39,7 +39,7 @@ def reset_session_state():
 def get_page_config():
     """Return Streamlit page configuration"""
     return {
-        "page_title": "AI Scenario Builder Tool",
+        "page_title": "Ace-AI Content Creation Tool",
         "page_icon": None,
         "layout": "wide",
         "initial_sidebar_state": "expanded"

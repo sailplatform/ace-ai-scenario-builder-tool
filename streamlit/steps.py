@@ -143,6 +143,122 @@ def _save_composited_images(screens, images):
             except Exception as e:
                 st.error(f"Error saving screen {i+1}: {str(e)}")
     
+    # Save interactive element if it exists
+    if "interactive_mcq" in st.session_state and screens and len(images) > 0:
+        try:
+            last_image_idx = len(screens) - 1
+            if last_image_idx < len(images) and images[last_image_idx].get("image_b64"):
+                mcq = st.session_state.interactive_mcq
+                image_b64 = images[last_image_idx].get("image_b64", "")
+                
+                img_data = base64.b64decode(image_b64)
+                img = Image.open(io.BytesIO(img_data))
+                img_rgba = img.convert('RGBA')
+                
+                overlay = Image.new('RGBA', img.size, (128, 128, 128, 100))
+                img_rgba = Image.alpha_composite(img_rgba, overlay)
+                
+                draw = ImageDraw.Draw(img_rgba)
+                width, height = img.size
+                
+                try:
+                    font_large = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 22)
+                    font_medium = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 16)
+                except:
+                    font_large = ImageFont.load_default()
+                    font_medium = ImageFont.load_default()
+                
+                def wrap_text(text, font, max_width):
+                    words = text.split()
+                    lines = []
+                    current_line = []
+                    for word in words:
+                        test_line = ' '.join(current_line + [word])
+                        bbox = draw.textbbox((0, 0), test_line, font=font)
+                        if bbox[2] - bbox[0] <= max_width:
+                            current_line.append(word)
+                        else:
+                            if current_line:
+                                lines.append(' '.join(current_line))
+                            current_line = [word]
+                    if current_line:
+                        lines.append(' '.join(current_line))
+                    return lines
+                
+                max_text_width_estimate = int(width * 0.7)
+                question_lines = wrap_text(mcq["question"], font_large, max_text_width_estimate)
+                
+                question_height = 0
+                max_question_width = 0
+                for line in question_lines:
+                    bbox = draw.textbbox((0, 0), line, font=font_large)
+                    line_width = bbox[2] - bbox[0]
+                    line_height = bbox[3] - bbox[1]
+                    question_height += int(line_height * 1.3)
+                    max_question_width = max(max_question_width, line_width)
+                
+                options_height = 0
+                max_option_width = 0
+                for opt_key in ["A", "B", "C", "D"]:
+                    opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                    opt_lines = wrap_text(opt_text, font_medium, max_text_width_estimate - 20)
+                    for line in opt_lines:
+                        bbox = draw.textbbox((0, 0), line, font=font_medium)
+                        line_width = bbox[2] - bbox[0]
+                        line_height = bbox[3] - bbox[1]
+                        options_height += int(line_height * 1.2)
+                        max_option_width = max(max_option_width, line_width + 30)
+                    options_height += 10
+                
+                total_text_width = max(max_question_width, max_option_width)
+                total_text_height = question_height + 20 + options_height
+                
+                padding_horizontal = 40
+                padding_vertical = 30
+                box_width = total_text_width + (padding_horizontal * 2)
+                box_height = total_text_height + (padding_vertical * 2)
+                
+                box_width = min(box_width, int(width * 0.9))
+                box_height = min(box_height, int(height * 0.8))
+                
+                box_left = (width - box_width) // 2
+                box_top = (height - box_height) // 2
+                box_right = box_left + box_width
+                box_bottom = box_top + box_height
+                
+                overlay_box = Image.new('RGBA', img.size, (255, 255, 255, 0))
+                overlay_draw = ImageDraw.Draw(overlay_box)
+                overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
+                                               radius=20, fill=(255, 255, 255, 255))
+                img_rgba = Image.alpha_composite(img_rgba, overlay_box)
+                draw = ImageDraw.Draw(img_rgba)
+                
+                max_text_width = box_width - (padding_horizontal * 2)
+                question_lines = wrap_text(mcq["question"], font_large, max_text_width)
+                question_y = box_top + padding_vertical
+                for line in question_lines:
+                    bbox = draw.textbbox((0, 0), line, font=font_large)
+                    text_width = bbox[2] - bbox[0]
+                    text_x = box_left + (box_width - text_width) // 2
+                    draw.text((text_x, question_y), line, fill=(0, 0, 0), font=font_large)
+                    question_y += int((bbox[3] - bbox[1]) * 1.3)
+                
+                option_y = question_y + 20
+                for opt_key in ["A", "B", "C", "D"]:
+                    opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                    opt_lines = wrap_text(opt_text, font_medium, max_text_width - 20)
+                    for line in opt_lines:
+                        draw.text((box_left + padding_horizontal, option_y), line, fill=(0, 0, 0), font=font_medium)
+                        bbox = draw.textbbox((0, 0), line, font=font_medium)
+                        option_y += int((bbox[3] - bbox[1]) * 1.2)
+                    option_y += 10
+                
+                img_final = img_rgba.convert('RGB')
+                output_path = os.path.join(output_folder, f"screen_{len(screens)+1}.png")
+                img_final.save(output_path, "PNG")
+        except Exception as e:
+            st.error(f"Error saving interactive element: {str(e)}")
+    
     return output_folder
 
 
@@ -256,7 +372,12 @@ safeChats is a fast-growing social media platform with active users worldwide. T
         while len(scenarios) < 3:
             scenarios.append("Additional scenario could not be generated.")
         
-        return scenarios[:3]
+        scenarios = scenarios[:3]
+        
+        # Hardcode scenario option 1
+        scenarios[0] = "QuickBuy's COO, Luisa Rodriguez, discovers a significant ethical issue, their new AI inventory management system is biased, leading to disparities in stock levels between affluent and diverse neighborhoods. This affects company reputation and raises concerns about perpetuating socioeconomic inequalities. Luisa now faces the challenge of recalibrating the AI to prevent biased decision making and creating a review process for ongoing ethical oversight. Her actions will set a precedent for how QuickBuy integrates values of fairness and equity in their AI applications, demonstrating to stakeholders the importance of responsible AI governance."
+        
+        return scenarios
         
     except Exception as e:
         st.error(f"Error generating scenarios with GPT: {str(e)}")
@@ -451,8 +572,15 @@ def step_existing_content_selection():
                     
                     if target_step >= 5 and os.path.exists(screens_path):
                         with open(screens_path, 'r') as f:
-                            st.session_state.screen_data = json.load(f)
+                            screen_data = json.load(f)
+                            st.session_state.screen_data = screen_data
                             st.session_state.screens_need_generation = False
+                            # Load interactive element if it exists
+                            if "interactive_element" in screen_data:
+                                st.session_state.interactive_element = screen_data["interactive_element"]
+                            # Load interactive_mcq if it exists in screen_data
+                            if "interactive_mcq" in screen_data:
+                                st.session_state.interactive_mcq = screen_data["interactive_mcq"]
                     
                     if target_step >= 6:
                         if os.path.exists(images_path):
@@ -1135,6 +1263,8 @@ def step_screen_generation():
     if "screen_data" not in st.session_state or not st.session_state.screen_data:
         st.session_state.screen_data = existing_screen_data or {}
         if existing_screen_data:
+            if "interactive_element" in existing_screen_data:
+                st.session_state.interactive_element = existing_screen_data["interactive_element"]
             _clear_sidebar_keys()
     
     # Get necessary data
@@ -1198,12 +1328,19 @@ Follow the traditional story structure of:
 - Use human-centered details (body language, environment, emotion) to make the story relatable.  
 - End with insight or resolution that ties directly back to the learning objective.
 
+**Interactive Element:**
+After creating all screens, also generate a description for an interactive MCQ element that will appear at the end of the scenario. This MCQ should:
+- Tie together the key concepts from the entire scenario
+- Test understanding of the main learning objective: {key_concept}
+- Be a challenging but fair question that reinforces what learners should have learned
+
 Format as JSON:
 {{
   "screens": [
     {{"screen_number": 1, "image_description": "", "caption": ""}},
     {{"screen_number": 2, "image_description": "", "caption": ""}}
-  ]
+  ],
+  "interactive_element_purpose": "A description of what the MCQ should test - a question that ties together the key concepts from the scenario and tests understanding of the main learning objective"
 }}
 
 Example response:
@@ -1266,6 +1403,12 @@ A suitable response could be:
                 if json_match:
                     screen_data = json.loads(json_match.group())
                     st.session_state.screen_data = screen_data
+                    if "interactive_element_purpose" in screen_data:
+                        if "interactive_element" not in st.session_state:
+                            st.session_state.interactive_element = {}
+                        st.session_state.interactive_element["purpose"] = screen_data["interactive_element_purpose"]
+                        st.session_state.interactive_element["type"] = "MCQ"
+                        del screen_data["interactive_element_purpose"]
                     st.session_state.screens_need_generation = False
                     _clear_sidebar_keys()
                 else:
@@ -1283,6 +1426,85 @@ A suitable response could be:
             image_desc = st.text_area(f"Image Description", value=screen.get("image_description", ""), key=f"screen_{i}_img", height=100)
             screens[i]["caption"] = caption
             screens[i]["image_description"] = image_desc
+    
+    # Interactive element configuration
+    st.markdown("---")
+    st.subheader("Interactive Element")
+    interactive_type = st.text_input(
+        "Type:",
+        value="MCQ",
+        key="interactive_type_input",
+        disabled=True
+    )
+
+    if "interactive_element" not in st.session_state:
+        st.session_state.interactive_element = {"type": "MCQ", "purpose": ""}
+    
+    # Auto-generate purpose if empty and screens exist
+    if not st.session_state.interactive_element.get("purpose", "") and screens:
+        if "interactive_purpose_generating" not in st.session_state:
+            st.session_state.interactive_purpose_generating = True
+            with st.spinner("🤖 Generating MCQ purpose..."):
+                try:
+                    client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                    final_scenario = st.session_state.scenario_data.get("final_scenario", "")
+                    key_concept = st.session_state.form_data["project"].get("key_concept", "")
+                    screens_summary = "\n".join([f"Screen {s.get('screen_number', i+1)}: {s.get('caption', '')}" for i, s in enumerate(screens)])
+                    
+                    prompt = f"""
+You are a learning engineer support bot focused on creating top quality multiple-choice question assessments.
+
+Generate a concise description (1-2 sentences) for a multiple-choice question (MCQ) that will appear at the end of this learning scenario. This description will be used to guide the generation of the actual MCQ later.
+
+**Context:**
+Scenario: {final_scenario}
+Key Learning Objective: {key_concept}
+Screens Summary:
+{screens_summary}
+
+**MCQ Purpose Requirements:**
+The MCQ should:
+1. Tie together the key concepts from the entire scenario in a meaningful way
+2. Test understanding of the main learning objective: {key_concept}
+3. Be designed as a challenging but fair question that reinforces what learners should have learned
+4. Assess the learner's ability to apply the key concept in a new context or situation
+5. Align with appropriate Bloom's Taxonomy level (Remember, Understand, Apply, Analyze, Evaluate, or Create) based on the learning objective
+6. Focus on the stem (the question itself) which should clearly present the context and what is being assessed
+
+**Output Format:**
+Provide only a 1-2 sentence description of what the MCQ should test. Be specific about:
+- What knowledge or skill the question will assess
+- How it connects to the scenario and learning objective
+- The type of thinking or application required
+
+Example: "A question that tests the learner's ability to identify the most appropriate use of LLMs in content moderation by analyzing a new scenario and selecting the approach that best balances accuracy, transparency, and multilingual support, based on the principles demonstrated throughout the safeChats case study."
+"""
+                    response = client.chat.completions.create(
+                        model="gpt-4-1106-preview",
+                        messages=[
+                            {"role": "system", "content": "You are an expert instructional designer. Generate concise, clear descriptions for MCQ purposes."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        max_tokens=150,
+                        temperature=0.7
+                    )
+                    generated_purpose = response.choices[0].message.content.strip()
+                    st.session_state.interactive_element["purpose"] = generated_purpose
+                    st.session_state.interactive_purpose_generating = False
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error generating MCQ purpose: {str(e)}")
+                    st.session_state.interactive_purpose_generating = False
+    
+    interactive_purpose = st.text_area(
+        "What should the MCQ be about? Describe the purpose and content:",
+        value=st.session_state.interactive_element.get("purpose", ""),
+        placeholder="e.g., A question that ties together the key concepts from the scenario and tests understanding of the main learning objective",
+        height=150,
+        key="interactive_purpose_input"
+    )
+    st.session_state.interactive_element["type"] = "MCQ"
+    st.session_state.interactive_element["purpose"] = interactive_purpose
     
     # Navigation
     st.markdown("---")
@@ -1304,8 +1526,11 @@ A suitable response could be:
                 module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
                 screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
                 os.makedirs(os.path.dirname(screens_filepath), exist_ok=True)
+                screen_data_to_save = st.session_state.screen_data.copy()
+                if "interactive_element" in st.session_state:
+                    screen_data_to_save["interactive_element"] = st.session_state.interactive_element
                 with open(screens_filepath, 'w') as f:
-                    json.dump(st.session_state.screen_data, f, indent=2)
+                    json.dump(screen_data_to_save, f, indent=2)
                 
                 _clear_sidebar_keys()
                 st.success("Screens saved successfully!")
@@ -1353,8 +1578,36 @@ def step_image_generation():
             st.rerun()
         return
     
-    current_idx = st.session_state.current_image_index
-    if current_idx >= len(screens):
+    current_idx = st.session_state.get("current_image_index", 0)
+    if current_idx == "interactive":
+        pass  # Will be handled in the interactive section
+    elif not isinstance(current_idx, int) or current_idx < 0:
+        current_idx = 0
+        st.session_state.current_image_index = 0
+    
+    interactive_available = st.session_state.get("interactive_element", {}).get("purpose", "")
+    interactive_generated = "interactive_mcq" in st.session_state
+    last_image_idx = len(screens) - 1
+    last_image_generated = last_image_idx >= 0 and last_image_idx < len(st.session_state.generated_images) and st.session_state.generated_images[last_image_idx].get("image_b64")
+    
+    # Load interactive_mcq from screens.json if it exists and hasn't been loaded yet
+    if interactive_available and last_image_generated and "interactive_mcq" not in st.session_state:
+        try:
+            course_title = st.session_state.form_data["course"].get("course_title", "")
+            module_title = st.session_state.form_data["project"].get("module_title", "")
+            course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+            module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+            screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+            if os.path.exists(screens_filepath):
+                with open(screens_filepath, 'r') as f:
+                    screen_data = json.load(f)
+                if "interactive_mcq" in screen_data:
+                    st.session_state.interactive_mcq = screen_data["interactive_mcq"]
+        except Exception as e:
+            pass  # Don't fail if load doesn't work
+    
+    
+    if isinstance(current_idx, int) and current_idx >= len(screens):
         st.success("All images generated successfully!")
         st.info(f"You've completed generating {len(screens)} images for your scenario.")
         col1, col2 = st.columns(2)
@@ -1369,25 +1622,59 @@ def step_image_generation():
                 st.rerun()
         return
     
-    current_screen = screens[current_idx]
-    
     # Navigation section - jump to any screen
     st.subheader("Navigation")
     nav_cols = st.columns([0.5, 1])
     with nav_cols[0]:
-        all_screen_options = list(range(len(screens)))
-        # To prevent typing, use st.radio (no free entry, just options)
-        selected_screen = st.radio(
+        all_options = list(range(len(screens)))
+        # Add Interactive Element option if last image is generated
+        # Check if interactive element exists in screens.json even if not in session state
+        interactive_exists_in_file = False
+        if last_image_generated:
+            try:
+                course_title = st.session_state.form_data["course"].get("course_title", "")
+                module_title = st.session_state.form_data["project"].get("module_title", "")
+                course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+                if os.path.exists(screens_filepath):
+                    with open(screens_filepath, 'r') as f:
+                        screen_data = json.load(f)
+                    if "interactive_element" in screen_data or "interactive_mcq" in screen_data:
+                        interactive_exists_in_file = True
+                        # Load interactive_element if not in session state
+                        if "interactive_element" in screen_data and "interactive_element" not in st.session_state:
+                            st.session_state.interactive_element = screen_data["interactive_element"]
+            except Exception as e:
+                pass
+        
+        # Show interactive element if last image is generated (regardless of purpose, since user might want to generate it)
+        if last_image_generated and (interactive_available or interactive_exists_in_file or "interactive_mcq" in st.session_state):
+            all_options.append("interactive")
+        
+        def format_option(x):
+            if x == "interactive":
+                return "Interactive Element" + (" (Generated)" if "interactive_mcq" in st.session_state else " (Not Generated)")
+            return f"Screen {x + 1}" + (" (Generated)" if x < len(st.session_state.generated_images) and st.session_state.generated_images[x].get("image_b64") else " (Not Generated)")
+        
+        current_selection = "interactive" if current_idx == "interactive" else (current_idx if isinstance(current_idx, int) and current_idx < len(screens) else len(screens) - 1)
+        selected_option = st.radio(
             "Jump to Screen",
-            options=all_screen_options,
-            format_func=lambda x: f"Screen {x + 1}" + (" (Generated)" if x < len(st.session_state.generated_images) and st.session_state.generated_images[x].get("image_b64") else " (Not Generated)"),
-            index=current_idx,
+            options=all_options,
+            format_func=format_option,
+            index=all_options.index(current_selection) if current_selection in all_options else 0,
             key="nav_radio_screen"
         )
-        if selected_screen != current_idx:
-            st.session_state.current_image_index = selected_screen
+        if selected_option != current_idx:
+            if selected_option == "interactive":
+                st.session_state.current_image_index = "interactive"
+            else:
+                st.session_state.current_image_index = selected_option
             st.rerun()
-        st.caption(f"Current: Screen {current_idx + 1} of {len(screens)}")
+        if current_idx == "interactive":
+            st.caption("Current: Interactive Element")
+        else:
+            st.caption(f"Current: Screen {current_idx + 1} of {len(screens)}")
     with nav_cols[1]:
         with st.expander("Tips for Editing Image Prompts", expanded=False):
             st.markdown(
@@ -1439,6 +1726,361 @@ def step_image_generation():
             Stay away from metaphors or concepts that are difficult for AI to render literally.
             """)
 
+    # Handle interactive element view - MUST be before accessing screens[current_idx]
+    if current_idx == "interactive":
+        if not interactive_available:
+            st.error("Interactive element is not configured. Please configure it in Step 5.")
+            if st.button("← Back to Screens", type="secondary"):
+                st.session_state.current_image_index = len(screens) - 1
+                st.rerun()
+            return
+        
+        if not last_image_generated:
+            st.error("Please generate the final image before generating the interactive element.")
+            if st.button("← Back to Screens", type="secondary"):
+                st.session_state.current_image_index = len(screens) - 1
+                st.rerun()
+            return
+    
+        st.markdown("---")
+        st.subheader("Interactive Element")
+        
+        # Generate MCQ if not already generated
+        if "interactive_mcq" not in st.session_state:
+            if st.button("Generate MCQ", type="primary", use_container_width=True):
+                with st.spinner("🤖 Generating MCQ..."):
+                    try:
+                        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+                        final_scenario = st.session_state.scenario_data.get("final_scenario", "")
+                        key_concept = st.session_state.form_data["project"].get("key_concept", "")
+                        interactive_purpose = st.session_state.get("interactive_element", {}).get("purpose", "")
+                        
+                        prompt = f"""
+You are a learning engineer support bot focused on creating top quality multiple-choice question assessments.
+
+A multiple-choice question is a collection of three components aimed at testing a student's understanding of a certain topic, given a particular context of what the student is expected to know. The topic, as well as the context of the topic, will be provided in order to generate effective multiple-choice questions. The three components of a multiple-choice question are as follows: a Stem, a Correct Answer, and two Distractors. There must always be only one correct answer and only two distractors.
+The stem refers to the question the student will attempt to answer, as well as the relevant context necessary in order to answer the question. It may be in the form of a question, an incomplete statement, or a scenario. The stem should focus on assessing the specific knowledge or concept the question aims to evaluate.
+The Correct Answer refers to the correct, undisputable answer to the question in the stem. Avoid overly long sentences (more than 10 words) when generating the correct answer.
+
+A Distractor is an incorrect answer to the question in the stem and adheres to the following properties.
+1. A distractor should not be obviously wrong. In other words, it must still bear relations to the stem and correct answer. 
+2. A distractor should be phrased positively and be a true statement that does not correctly answer the stem, all while giving no clues towards the correct answer.
+3. Although a distractor is incorrect, it must be plausible: in other words, it must be positioned such that a student who does not fully grasp the topic may believe that the distractor is the correct answer choice. Later provided with the topic and context students will be assessed on is a list of common misconceptions within that topic. Please generate the distractors such that a student with any of these misconceptions may believe the distractor is the correct response to the stem, if possible. 
+4. A distractor must be incorrect. It cannot be correct, or interpreted as correct by someone who strongly grasps the topic.
+
+The term "answer choices" is a phrase that refers to a grouping of the two distractors as well as the correct answer. A single "answer choice" refers to only one of the distractors or the correct answer. The answer choices should be homogeneous and parallel in format, such that they are of similar length and structure. After the stem has been generated, be sure to list the answer choices in alphabetical order.
+Use "None of the Above" or "All of the Above" style answer choices sparingly. These answer choices have been shown to, in general, be less effective at measuring or assessing student understanding. 
+Multiple-choice questions should be clear, concise, and grammatically correct statements. Make sure the questions are worded in a way that is easy to understand and does not introduce unnecessary complexity or ambiguity. Students should be able to understand the questions without confusion. The question should not be too long, and allow most students to finish in less than five minutes. This means adhering to the following properties.
+1. Avoid using overly long sentences.
+2. Avoid code that is longer than 20 lines for questions, and longer than 10 lines for the correct answer and distractors. 
+3. If you refer to the same item or activity multiple times, use the same phrase each time.
+4. Ensure that each multiple-choice question provides full context. In other words, if a phrase or action is not part of the provided topic or topic context that a student is expected to know, then be sure to explain it briefly or consider not including it.
+5. Ensure that none of the distractors overlap. In other words, attempt to make each distractor reflect a different misconception on the topic, rather than a single one, if possible.
+6. Avoid too many clues. Do not include too many clues or hints in the answer options, which may make it too obvious for students to determine the correct answer. These options should require students to use their knowledge and reasoning to make an informed choice.
+
+Keep in mind that the Correct Answer and the distractors must resemble each other in word length.
+You may be told by the user to consider implementing stacking into some of the multiple-choice questions to increase difficulty. Stacking is the practice of implementing multiple subtopics into a question, such that the question still addresses a main topic, but will require a sufficient understanding of the subtopics to correctly answer. To do this, when you are given a topic and the context a student should have of that topic, consider picking subtopics out of that context in order to successfully use stacking. Stacking should be used moderately, such that the generated multiple-choice questions can be good indicators of student understanding.
+Blooms' Taxonomy and Action Verbs:
+
+Multiple-choice questions must be well aligned to the learning objectives they are intended to assess students' knowledge on. This implies that they must assess skills at the right cognitive level corresponding to the Bloom's taxonomy categorization of the learning objective. Bloom's Taxonomy offers a framework for categorizing the depth of learning, and it provides guidance on selecting appropriate action verbs when writing learning objectives. Here are the six levels of Bloom's taxonomy and their definitions:
+- Remember - This level involves retrieving, recognizing, and recalling relevant knowledge from long-term memory.
+- Understand - At this level, learners construct meaning from oral, written, and graphic messages through interpreting, exemplifying, classifying, summarizing, inferring, comparing, and explaining.
+- Apply - This level requires learners to carry out or use a procedure through executing or implementing it.
+- Analyze - At this level, learners break material into constituent parts, determine how the parts relate to one another and to an overall structure or purpose through differentiating, organizing, and attributing.
+- Evaluate - This level involves making judgments based on criteria and standards through checking and critiquing.
+- Create - At this level, learners put elements together to form a coherent or functional whole, or they reorganize elements into a new pattern or structure through generating, planning, or producing.
+
+Now, generate a multiple choice question that ties together the entire scenario and tests understanding of the key learning objective.
+
+Scenario: {final_scenario}
+Key Concept: {key_concept}
+Purpose: {interactive_purpose}
+
+**IMPORTANT:** For each answer choice, you must provide specific, educational feedback that:
+- For the correct answer: Explains why it is correct and reinforces the key learning objective
+- For incorrect answers: Explains why it is incorrect, identifies the misconception, and guides the learner toward the correct understanding
+- Is concise (1-2 sentences) but informative
+- Helps learners understand the concept better, not just whether they were right or wrong
+
+Format as JSON:
+{{
+  "question": "The question text here",
+  "options": {{
+    "A": "Option A text",
+    "B": "Option B text",
+    "C": "Option C text",
+    "D": "Option D text"
+  }},
+  "correct_answer": "A",
+  "feedback": {{
+    "A": "Feedback for option A explaining why it is correct and reinforcing the key concept",
+    "B": "Feedback for option B explaining why it is incorrect and what misconception it represents",
+    "C": "Feedback for option C explaining why it is incorrect and what misconception it represents",
+    "D": "Feedback for option D explaining why it is incorrect and what misconception it represents"
+  }}
+}}
+"""
+                        response = client.chat.completions.create(
+                            model="gpt-4-1106-preview",
+                            messages=[
+                                {"role": "system", "content": "You are an expert instructional designer. Generate MCQs in valid JSON format."},
+                                {"role": "user", "content": prompt}
+                            ],
+                            max_tokens=800,
+                            temperature=0.7
+                        )
+                        import re
+                        content = response.choices[0].message.content
+                        json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                        if json_match:
+                            st.session_state.interactive_mcq = json.loads(json_match.group())
+                            # Save MCQ to screens.json
+                            try:
+                                course_title = st.session_state.form_data["course"].get("course_title", "")
+                                module_title = st.session_state.form_data["project"].get("module_title", "")
+                                course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                                module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                                screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+                                if os.path.exists(screens_filepath):
+                                    with open(screens_filepath, 'r') as f:
+                                        screen_data = json.load(f)
+                                else:
+                                    screen_data = st.session_state.screen_data.copy()
+                                screen_data["interactive_mcq"] = st.session_state.interactive_mcq
+                                os.makedirs(os.path.dirname(screens_filepath), exist_ok=True)
+                                with open(screens_filepath, 'w') as f:
+                                    json.dump(screen_data, f, indent=2)
+                            except Exception as e:
+                                pass  # Don't fail if save doesn't work
+                            st.rerun()
+                        else:
+                            st.error("Failed to generate MCQ")
+                    except Exception as e:
+                        st.error(f"Error generating MCQ: {str(e)}")
+        else:
+            # Display interactive element
+            mcq = st.session_state.interactive_mcq
+            image_b64 = st.session_state.generated_images[last_image_idx].get("image_b64", "")
+            
+            from PIL import Image as PILImage, ImageDraw, ImageFont
+            import base64 as b64_module
+            
+            img_data = b64_module.b64decode(image_b64)
+            img = PILImage.open(io.BytesIO(img_data))
+            img_rgba = img.convert('RGBA')
+            
+            overlay = PILImage.new('RGBA', img.size, (128, 128, 128, 100))
+            img_rgba = PILImage.alpha_composite(img_rgba, overlay)
+            
+            draw = ImageDraw.Draw(img_rgba)
+            width, height = img.size
+            
+            try:
+                font_large = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 22)
+                font_medium = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 16)
+            except:
+                font_large = ImageFont.load_default()
+                font_medium = ImageFont.load_default()
+            
+            def wrap_text(text, font, max_width):
+                words = text.split()
+                lines = []
+                current_line = []
+                for word in words:
+                    test_line = ' '.join(current_line + [word])
+                    bbox = draw.textbbox((0, 0), test_line, font=font)
+                    if bbox[2] - bbox[0] <= max_width:
+                        current_line.append(word)
+                    else:
+                        if current_line:
+                            lines.append(' '.join(current_line))
+                        current_line = [word]
+                if current_line:
+                    lines.append(' '.join(current_line))
+                return lines
+            
+            # Calculate text dimensions first to size the box
+            max_text_width_estimate = int(width * 0.7)  # Start with estimate
+            question_lines = wrap_text(mcq["question"], font_large, max_text_width_estimate)
+            
+            # Calculate question height
+            question_height = 0
+            max_question_width = 0
+            for line in question_lines:
+                bbox = draw.textbbox((0, 0), line, font=font_large)
+                line_width = bbox[2] - bbox[0]
+                line_height = bbox[3] - bbox[1]
+                question_height += int(line_height * 1.3)
+                max_question_width = max(max_question_width, line_width)
+            
+            # Calculate options height and width
+            options_height = 0
+            max_option_width = 0
+            for opt_key in ["A", "B", "C", "D"]:
+                opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                opt_lines = wrap_text(opt_text, font_medium, max_text_width_estimate - 20)
+                for line in opt_lines:
+                    bbox = draw.textbbox((0, 0), line, font=font_medium)
+                    line_width = bbox[2] - bbox[0]
+                    line_height = bbox[3] - bbox[1]
+                    options_height += int(line_height * 1.2)
+                    max_option_width = max(max_option_width, line_width + 30)  # +30 for left padding
+                options_height += 10  # Spacing between options
+            
+            # Calculate total content dimensions
+            total_text_width = max(max_question_width, max_option_width)
+            total_text_height = question_height + 20 + options_height  # 20 for spacing between question and options
+            
+            # Set box dimensions with padding (40px on each side, 30px top/bottom)
+            padding_horizontal = 40
+            padding_vertical = 30
+            box_width = total_text_width + (padding_horizontal * 2)
+            box_height = total_text_height + (padding_vertical * 2)
+            
+            # Ensure box doesn't exceed image dimensions
+            box_width = min(box_width, int(width * 0.9))
+            box_height = min(box_height, int(height * 0.8))
+            
+            # Center the box
+            box_left = (width - box_width) // 2
+            box_top = (height - box_height) // 2
+            box_right = box_left + box_width
+            box_bottom = box_top + box_height
+            
+            overlay_box = PILImage.new('RGBA', img.size, (255, 255, 255, 0))
+            overlay_draw = ImageDraw.Draw(overlay_box)
+            overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
+                                           radius=20, fill=(255, 255, 255, 255))
+            img_rgba = PILImage.alpha_composite(img_rgba, overlay_box)
+            draw = ImageDraw.Draw(img_rgba)
+            
+            # Now draw the text with the calculated box
+            max_text_width = box_width - (padding_horizontal * 2)
+            question_lines = wrap_text(mcq["question"], font_large, max_text_width)
+            question_y = box_top + padding_vertical
+            for line in question_lines:
+                bbox = draw.textbbox((0, 0), line, font=font_large)
+                text_width = bbox[2] - bbox[0]
+                text_x = box_left + (box_width - text_width) // 2
+                draw.text((text_x, question_y), line, fill=(0, 0, 0), font=font_large)
+                question_y += int((bbox[3] - bbox[1]) * 1.3)
+            
+            option_y = question_y + 20
+            for opt_key in ["A", "B", "C", "D"]:
+                opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                opt_lines = wrap_text(opt_text, font_medium, max_text_width - 20)
+                for line in opt_lines:
+                    draw.text((box_left + padding_horizontal, option_y), line, fill=(0, 0, 0), font=font_medium)
+                    bbox = draw.textbbox((0, 0), line, font=font_medium)
+                    option_y += int((bbox[3] - bbox[1]) * 1.2)
+                option_y += 10
+            
+            img_final = img_rgba.convert('RGB')
+            buffer = io.BytesIO()
+            img_final.save(buffer, format='PNG')
+            img_b64_final = b64_module.b64encode(buffer.getvalue()).decode()
+            image_data_uri = f"data:image/png;base64,{img_b64_final}"
+            
+            st.markdown(f"""
+            <div style="position:relative; display:block; width:100%; max-width:960px; margin:0 auto;">
+                <img src="{image_data_uri}" style="width:100%; border-radius:18px;">
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            st.subheader("Edit & Test Interactive MCQ")
+            
+            # Editable MCQ form
+            with st.expander("Edit MCQ Content", expanded=True):
+                edited_question = st.text_area(
+                    "Question:",
+                    value=mcq.get("question", ""),
+                    key=f"edit_mcq_question_{last_image_idx}",
+        height=100
+    )
+    
+                st.markdown("**Answer Options:**")
+                edited_options = {}
+                for opt_key in ["A", "B", "C", "D"]:
+                    edited_options[opt_key] = st.text_input(
+                        f"Option {opt_key}:",
+                        value=mcq.get("options", {}).get(opt_key, ""),
+                        key=f"edit_mcq_option_{opt_key}_{last_image_idx}"
+                    )
+                
+                correct_answer = st.radio(
+                    "Correct Answer:",
+                    options=["A", "B", "C", "D"],
+                    index=["A", "B", "C", "D"].index(mcq.get("correct_answer", "A")) if mcq.get("correct_answer", "A") in ["A", "B", "C", "D"] else 0,
+                    key=f"edit_mcq_correct_{last_image_idx}",
+                    horizontal=True
+                )
+                
+                st.markdown("**Feedback for Each Option:**")
+                edited_feedback = {}
+                for opt_key in ["A", "B", "C", "D"]:
+                    edited_feedback[opt_key] = st.text_area(
+                        f"Feedback for Option {opt_key}:",
+                        value=mcq.get("feedback", {}).get(opt_key, ""),
+                        key=f"edit_mcq_feedback_{opt_key}_{last_image_idx}",
+                        height=80
+                    )
+                
+                if st.button("Save MCQ Changes", type="primary", use_container_width=True, key=f"save_mcq_{last_image_idx}"):
+                    # Update MCQ in session state
+                    st.session_state.interactive_mcq = {
+                        "question": edited_question,
+                        "options": edited_options,
+                        "correct_answer": correct_answer,
+                        "feedback": edited_feedback
+                    }
+                    # Save to screens.json
+                    try:
+                        course_title = st.session_state.form_data["course"].get("course_title", "")
+                        module_title = st.session_state.form_data["project"].get("module_title", "")
+                        course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                        module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                        screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+                        if os.path.exists(screens_filepath):
+                            with open(screens_filepath, 'r') as f:
+                                screen_data = json.load(f)
+                        else:
+                            screen_data = st.session_state.screen_data.copy()
+                        screen_data["interactive_mcq"] = st.session_state.interactive_mcq
+                        os.makedirs(os.path.dirname(screens_filepath), exist_ok=True)
+                        with open(screens_filepath, 'w') as f:
+                            json.dump(screen_data, f, indent=2)
+                        st.success("MCQ saved successfully!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error saving MCQ: {str(e)}")
+            
+            st.markdown("---")
+            if st.button("Regenerate MCQ", type="primary", use_container_width=True):
+                if "interactive_mcq" in st.session_state:
+                    del st.session_state["interactive_mcq"]
+                    # Remove from screens.json as well
+                    try:
+                        course_title = st.session_state.form_data["course"].get("course_title", "")
+                        module_title = st.session_state.form_data["project"].get("module_title", "")
+                        course_name = "".join(c for c in course_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                        module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
+                        screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
+                        if os.path.exists(screens_filepath):
+                            with open(screens_filepath, 'r') as f:
+                                screen_data = json.load(f)
+                            if "interactive_mcq" in screen_data:
+                                del screen_data["interactive_mcq"]
+                            with open(screens_filepath, 'w') as f:
+                                json.dump(screen_data, f, indent=2)
+                    except Exception as e:
+                        pass  # Don't fail if save doesn't work
+                st.rerun()
+        
+        return
+    
+    # Now we know current_idx is an integer, so we can safely access screens
+    current_screen = screens[current_idx]
     
     st.markdown("---")
     st.subheader(f"Screen {current_idx + 1} of {len(screens)}")
@@ -1462,7 +2104,7 @@ def step_image_generation():
     screens[current_idx]["image_description"] = edited_image_desc
     
     # Check if regeneration is needed
-    needs_generation = current_idx >= len(st.session_state.generated_images) or not st.session_state.generated_images[current_idx].get("image_b64")
+    needs_generation = (isinstance(current_idx, int) and (current_idx >= len(st.session_state.generated_images) or not st.session_state.generated_images[current_idx].get("image_b64")))
     
     # Auto-regenerate if flag is set
     auto_regenerate = st.session_state.get("regenerate_image") == current_idx
@@ -1519,7 +2161,7 @@ def step_image_generation():
                         st.session_state.generated_images.extend(
                             [{}] * (current_idx - len(st.session_state.generated_images) + 1)
                         )
-
+                    
                     # Store image metadata
                     st.session_state.generated_images[current_idx] = {
                         "image_b64": image_b64,
@@ -1544,34 +2186,178 @@ def step_image_generation():
     #     st.info("Generate this screen's image to preview it here.")
 
     all_generated = [(i, img) for i, img in enumerate(st.session_state.generated_images) if img.get("image_b64")]
+    interactive_available = st.session_state.get("interactive_element", {}).get("purpose", "")
+    interactive_generated = "interactive_mcq" in st.session_state
+    last_image_idx = len(screens) - 1
+    last_image_generated = last_image_idx >= 0 and last_image_idx < len(st.session_state.generated_images) and st.session_state.generated_images[last_image_idx].get("image_b64")
+    
     if all_generated:
         st.markdown("---")
         st.subheader("All Generated Screens")
         num_per_row = 2
+        
+        # Add interactive element to display list if available and generated
+        display_items = all_generated.copy()
+        if interactive_available and last_image_generated and "interactive_mcq" in st.session_state:
+            display_items.append(("interactive", None))
 
-        for row_start in range(0, len(all_generated), num_per_row):
-            row_items = all_generated[row_start:row_start + num_per_row]
+        for row_start in range(0, len(display_items), num_per_row):
+            row_items = display_items[row_start:row_start + num_per_row]
             cols = st.columns(2, gap="small")
 
-            for idx, (orig_idx, img_data) in enumerate(row_items):
+            for idx, item in enumerate(row_items):
                 with cols[idx]:
-                    is_current = orig_idx == current_idx
-                    caption_text = screens[orig_idx].get("caption", "") if orig_idx < len(screens) else ""
-                    image_data_uri = f"data:image/png;base64,{img_data['image_b64']}"
-                    
-                    img_style = "display:block; width:100%; height:auto; border-radius:18px; object-fit:cover;"
-                    if not is_current:
-                        img_style += " filter:grayscale(65%) contrast(95%); opacity:0.75;"
+                    if item[0] == "interactive":
+                        # Show interactive element
+                        if "interactive_mcq" in st.session_state:
+                            mcq = st.session_state.interactive_mcq
+                            image_b64 = st.session_state.generated_images[last_image_idx].get("image_b64", "")
+                            
+                            from PIL import Image as PILImage, ImageDraw, ImageFont
+                            import base64 as b64_module
+                            
+                            img_data = b64_module.b64decode(image_b64)
+                            img = PILImage.open(io.BytesIO(img_data))
+                            img_rgba = img.convert('RGBA')
+                            
+                            overlay = PILImage.new('RGBA', img.size, (128, 128, 128, 100))
+                            img_rgba = PILImage.alpha_composite(img_rgba, overlay)
+                            
+                            draw = ImageDraw.Draw(img_rgba)
+                            width, height = img.size
+                            
+                            try:
+                                font_large = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 22)
+                                font_medium = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 16)
+                            except:
+                                font_large = ImageFont.load_default()
+                                font_medium = ImageFont.load_default()
+                            
+                            def wrap_text(text, font, max_width):
+                                words = text.split()
+                                lines = []
+                                current_line = []
+                                for word in words:
+                                    test_line = ' '.join(current_line + [word])
+                                    bbox = draw.textbbox((0, 0), test_line, font=font)
+                                    if bbox[2] - bbox[0] <= max_width:
+                                        current_line.append(word)
+                                    else:
+                                        if current_line:
+                                            lines.append(' '.join(current_line))
+                                        current_line = [word]
+                                if current_line:
+                                    lines.append(' '.join(current_line))
+                                return lines
+                            
+                            # Calculate text dimensions first to size the box
+                            max_text_width_estimate = int(width * 0.7)  # Start with estimate
+                            question_lines = wrap_text(mcq["question"], font_large, max_text_width_estimate)
+                            
+                            # Calculate question height
+                            question_height = 0
+                            max_question_width = 0
+                            for line in question_lines:
+                                bbox = draw.textbbox((0, 0), line, font=font_large)
+                                line_width = bbox[2] - bbox[0]
+                                line_height = bbox[3] - bbox[1]
+                                question_height += int(line_height * 1.3)
+                                max_question_width = max(max_question_width, line_width)
+                            
+                            # Calculate options height and width
+                            options_height = 0
+                            max_option_width = 0
+                            for opt_key in ["A", "B", "C", "D"]:
+                                opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                                opt_lines = wrap_text(opt_text, font_medium, max_text_width_estimate - 20)
+                                for line in opt_lines:
+                                    bbox = draw.textbbox((0, 0), line, font=font_medium)
+                                    line_width = bbox[2] - bbox[0]
+                                    line_height = bbox[3] - bbox[1]
+                                    options_height += int(line_height * 1.2)
+                                    max_option_width = max(max_option_width, line_width + 30)  # +30 for left padding
+                                options_height += 10  # Spacing between options
+                            
+                            # Calculate total content dimensions
+                            total_text_width = max(max_question_width, max_option_width)
+                            total_text_height = question_height + 20 + options_height  # 20 for spacing between question and options
+                            
+                            # Set box dimensions with padding (40px on each side, 30px top/bottom)
+                            padding_horizontal = 40
+                            padding_vertical = 30
+                            box_width = total_text_width + (padding_horizontal * 2)
+                            box_height = total_text_height + (padding_vertical * 2)
+                            
+                            # Ensure box doesn't exceed image dimensions
+                            box_width = min(box_width, int(width * 0.9))
+                            box_height = min(box_height, int(height * 0.8))
+                            
+                            # Center the box
+                            box_left = (width - box_width) // 2
+                            box_top = (height - box_height) // 2
+                            box_right = box_left + box_width
+                            box_bottom = box_top + box_height
+                            
+                            overlay_box = PILImage.new('RGBA', img.size, (255, 255, 255, 0))
+                            overlay_draw = ImageDraw.Draw(overlay_box)
+                            overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
+                                                           radius=20, fill=(255, 255, 255, 255))
+                            img_rgba = PILImage.alpha_composite(img_rgba, overlay_box)
+                            draw = ImageDraw.Draw(img_rgba)
+                            
+                            # Now draw the text with the calculated box
+                            max_text_width = box_width - (padding_horizontal * 2)
+                            question_lines = wrap_text(mcq["question"], font_large, max_text_width)
+                            question_y = box_top + padding_vertical
+                            for line in question_lines:
+                                bbox = draw.textbbox((0, 0), line, font=font_large)
+                                text_width = bbox[2] - bbox[0]
+                                text_x = box_left + (box_width - text_width) // 2
+                                draw.text((text_x, question_y), line, fill=(0, 0, 0), font=font_large)
+                                question_y += int((bbox[3] - bbox[1]) * 1.3)
+                            
+                            option_y = question_y + 20
+                            for opt_key in ["A", "B", "C", "D"]:
+                                opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                                opt_lines = wrap_text(opt_text, font_medium, max_text_width - 20)
+                                for line in opt_lines:
+                                    draw.text((box_left + padding_horizontal, option_y), line, fill=(0, 0, 0), font=font_medium)
+                                    bbox = draw.textbbox((0, 0), line, font=font_medium)
+                                    option_y += int((bbox[3] - bbox[1]) * 1.2)
+                                option_y += 10
+                            
+                            img_final = img_rgba.convert('RGB')
+                            buffer = io.BytesIO()
+                            img_final.save(buffer, format='PNG')
+                            img_b64_final = b64_module.b64encode(buffer.getvalue()).decode()
+                            image_data_uri = f"data:image/png;base64,{img_b64_final}"
+                            
+                            img_style = "display:block; width:100%; height:auto; border-radius:18px; object-fit:cover;"
 
-                    st.markdown(
-                        f"""
-                        <div style="position:relative; width:100%; margin-bottom:1rem;">
-                            <img src="{image_data_uri}" style="{img_style}">
-                            {f'<div style="position:absolute; left:12px; right:12px; bottom:12px; background:rgba(255,255,255,0.94); border-radius:8px; padding:8px 12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); font-size:0.75rem; line-height:1.4; color:#121212; max-height:40%; overflow:hidden;">{html.escape(caption_text)}</div>' if caption_text else ''}
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                            st.markdown(
+                                f"""
+                                        <div style="position:relative; width:100%; margin-bottom:1rem;">
+                                            <img src="{image_data_uri}" style="{img_style}">
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
+                    else:
+                        orig_idx, img_data = item
+                        caption_text = screens[orig_idx].get("caption", "") if orig_idx < len(screens) else ""
+                        image_data_uri = f"data:image/png;base64,{img_data['image_b64']}"
+                        
+                        img_style = "display:block; width:100%; height:auto; border-radius:18px; object-fit:cover;"
+
+                        st.markdown(
+                            f"""
+                            <div style="position:relative; width:100%; margin-bottom:1rem;">
+                                <img src="{image_data_uri}" style="{img_style}">
+                                {f'<div style="position:absolute; left:12px; right:12px; bottom:12px; background:rgba(255,255,255,0.94); border-radius:8px; padding:8px 12px; box-shadow:0 4px 12px rgba(0,0,0,0.2); font-size:0.75rem; line-height:1.4; color:#121212; max-height:40%; overflow:hidden;">{html.escape(caption_text)}</div>' if caption_text else ''}
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
     
     # Action buttons  
     st.markdown("---")
@@ -1585,8 +2371,14 @@ def step_image_generation():
     
     with col2:
         # Only show accept if image is generated
-        if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_b64"):
-            if st.button("Accept & Continue" if current_idx < len(screens) - 1 else " Accept & Finish", type="primary"):
+        if isinstance(current_idx, int) and current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_b64"):
+            is_last_screen = current_idx == len(screens) - 1
+            interactive_required = interactive_available and is_last_screen
+            interactive_ready = "interactive_mcq" in st.session_state if interactive_required else True
+            
+            if is_last_screen and not interactive_ready:
+                st.info("Please generate the Interactive Element before finishing.")
+            elif st.button("Accept & Continue" if not is_last_screen else " Accept & Finish", type="primary", disabled=(is_last_screen and not interactive_ready)):
                 try:
                     # Save screens with edits
                     course_title = st.session_state.form_data["course"].get("course_title", "")
@@ -1595,8 +2387,12 @@ def step_image_generation():
                     module_name = "".join(c for c in module_title if c.isalnum() or c in (' ', '-', '_')).rstrip().replace(' ', '_')
                     screens_filepath = f"data/{course_name}/{module_name}/text_outputs/screens.json"
                     os.makedirs(os.path.dirname(screens_filepath), exist_ok=True)
+                    screen_data_to_save = st.session_state.screen_data.copy()
+                    # Include interactive_mcq if it exists
+                    if "interactive_mcq" in st.session_state:
+                        screen_data_to_save["interactive_mcq"] = st.session_state.interactive_mcq
                     with open(screens_filepath, 'w') as f:
-                        json.dump(st.session_state.screen_data, f, indent=2)
+                        json.dump(screen_data_to_save, f, indent=2)
                     
                     # Save generated images
                     images_filepath = f"data/{course_name}/{module_name}/text_outputs/generated_images.json"
@@ -1607,6 +2403,8 @@ def step_image_generation():
                     st.session_state.generated_images[current_idx]["accepted"] = True
                     if current_idx < len(screens) - 1:
                         st.session_state.current_image_index = current_idx + 1
+                    elif is_last_screen and interactive_ready:
+                        st.session_state.current_step = 7
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error saving: {str(e)}")
@@ -1614,7 +2412,7 @@ def step_image_generation():
                     _persist_generated_images()
     
     with col3:
-        if current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_b64"):
+        if isinstance(current_idx, int) and current_idx < len(st.session_state.generated_images) and st.session_state.generated_images[current_idx].get("image_b64"):
             if st.button("Regenerate Image", type="secondary"):
                 st.session_state.generated_images[current_idx]["image_b64"] = None
                 st.session_state.regenerate_image = current_idx
@@ -1643,15 +2441,207 @@ def step_final_preview():
     #         st.rerun()
     #     return
 
-    if "preview_index" not in st.session_state or st.session_state.preview_index >= len(screens):
+    interactive_available = st.session_state.get("interactive_element", {}).get("purpose", "")
+    total_items = len(screens) + (1 if interactive_available and "interactive_mcq" in st.session_state else 0)
+
+    if "preview_index" not in st.session_state or st.session_state.preview_index >= total_items:
         st.session_state.preview_index = 0
 
     idx = st.session_state.preview_index
-    caption = screens[idx].get("caption", "")
-    image_b64 = ""
-    if idx < len(images) and images[idx]:
-        image_b64 = images[idx].get("image_b64", "")
-    image_data_uri = f"data:image/png;base64,{image_b64}" if image_b64 else ""
+    viewing_interactive = interactive_available and idx >= len(screens)
+    
+    if viewing_interactive:
+        # Show interactive element
+        if "interactive_mcq" in st.session_state and screens:
+            mcq = st.session_state.interactive_mcq
+            last_image_idx = len(screens) - 1
+            if last_image_idx < len(images) and images[last_image_idx]:
+                image_b64 = images[last_image_idx].get("image_b64", "")
+                if image_b64:
+                    # Create composited image with MCQ overlay
+                    from PIL import Image as PILImage, ImageDraw, ImageFont
+                    import base64 as b64_module
+                    
+                    img_data = b64_module.b64decode(image_b64)
+                    img = PILImage.open(io.BytesIO(img_data))
+                    img_rgba = img.convert('RGBA')
+                    
+                    # Gray out the image
+                    overlay = PILImage.new('RGBA', img.size, (128, 128, 128, 100))
+                    img_rgba = PILImage.alpha_composite(img_rgba, overlay)
+                    
+                    # Draw white box with MCQ
+                    draw = ImageDraw.Draw(img_rgba)
+                    width, height = img.size
+                    
+                    # Draw text with wrapping
+                    try:
+                        font_large = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 22)
+                        font_medium = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 16)
+                    except:
+                        font_large = ImageFont.load_default()
+                        font_medium = ImageFont.load_default()
+                    
+                    def wrap_text(text, font, max_width):
+                        words = text.split()
+                        lines = []
+                        current_line = []
+                        for word in words:
+                            test_line = ' '.join(current_line + [word])
+                            bbox = draw.textbbox((0, 0), test_line, font=font)
+                            if bbox[2] - bbox[0] <= max_width:
+                                current_line.append(word)
+                            else:
+                                if current_line:
+                                    lines.append(' '.join(current_line))
+                                current_line = [word]
+                        if current_line:
+                            lines.append(' '.join(current_line))
+                        return lines
+                    
+                    # Calculate text dimensions first to size the box
+                    max_text_width_estimate = int(width * 0.7)  # Start with estimate
+                    question_lines = wrap_text(mcq["question"], font_large, max_text_width_estimate)
+                    
+                    # Calculate question height
+                    question_height = 0
+                    max_question_width = 0
+                    for line in question_lines:
+                        bbox = draw.textbbox((0, 0), line, font=font_large)
+                        line_width = bbox[2] - bbox[0]
+                        line_height = bbox[3] - bbox[1]
+                        question_height += int(line_height * 1.3)
+                        max_question_width = max(max_question_width, line_width)
+                    
+                    # Calculate options height and width
+                    options_height = 0
+                    max_option_width = 0
+                    for opt_key in ["A", "B", "C", "D"]:
+                        opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                        opt_lines = wrap_text(opt_text, font_medium, max_text_width_estimate - 20)
+                        for line in opt_lines:
+                            bbox = draw.textbbox((0, 0), line, font=font_medium)
+                            line_width = bbox[2] - bbox[0]
+                            line_height = bbox[3] - bbox[1]
+                            options_height += int(line_height * 1.2)
+                            max_option_width = max(max_option_width, line_width + 30)  # +30 for left padding
+                        options_height += 10  # Spacing between options
+                    
+                    # Calculate total content dimensions
+                    total_text_width = max(max_question_width, max_option_width)
+                    total_text_height = question_height + 20 + options_height  # 20 for spacing between question and options
+                    
+                    # Set box dimensions with padding (40px on each side, 30px top/bottom)
+                    padding_horizontal = 40
+                    padding_vertical = 30
+                    box_width = total_text_width + (padding_horizontal * 2)
+                    box_height = total_text_height + (padding_vertical * 2)
+                    
+                    # Ensure box doesn't exceed image dimensions
+                    box_width = min(box_width, int(width * 0.9))
+                    box_height = min(box_height, int(height * 0.8))
+                    
+                    # Center the box
+                    box_left = (width - box_width) // 2
+                    box_top = (height - box_height) // 2
+                    box_right = box_left + box_width
+                    box_bottom = box_top + box_height
+                    
+                    # Draw rounded rectangle
+                    overlay_box = PILImage.new('RGBA', img.size, (255, 255, 255, 0))
+                    overlay_draw = ImageDraw.Draw(overlay_box)
+                    overlay_draw.rounded_rectangle([box_left, box_top, box_right, box_bottom], 
+                                                   radius=20, fill=(255, 255, 255, 255))
+                    img_rgba = PILImage.alpha_composite(img_rgba, overlay_box)
+                    draw = ImageDraw.Draw(img_rgba)
+                    
+                    # Now draw the text with the calculated box
+                    max_text_width = box_width - (padding_horizontal * 2)
+                    question_lines = wrap_text(mcq["question"], font_large, max_text_width)
+                    question_y = box_top + padding_vertical
+                    for line in question_lines:
+                        bbox = draw.textbbox((0, 0), line, font=font_large)
+                        text_width = bbox[2] - bbox[0]
+                        text_x = box_left + (box_width - text_width) // 2
+                        draw.text((text_x, question_y), line, fill=(0, 0, 0), font=font_large)
+                        question_y += int((bbox[3] - bbox[1]) * 1.3)
+                    
+                    # Options with wrapping
+                    option_y = question_y + 20
+                    for opt_key in ["A", "B", "C", "D"]:
+                        opt_text = f"{opt_key}. {mcq['options'][opt_key]}"
+                        opt_lines = wrap_text(opt_text, font_medium, max_text_width - 20)
+                        for line in opt_lines:
+                            draw.text((box_left + padding_horizontal, option_y), line, fill=(0, 0, 0), font=font_medium)
+                            bbox = draw.textbbox((0, 0), line, font=font_medium)
+                            option_y += int((bbox[3] - bbox[1]) * 1.2)
+                        option_y += 10
+                    
+                    # Convert to base64
+                    img_final = img_rgba.convert('RGB')
+                    buffer = io.BytesIO()
+                    img_final.save(buffer, format='PNG')
+                    img_b64_final = b64_module.b64encode(buffer.getvalue()).decode()
+                    image_data_uri = f"data:image/png;base64,{img_b64_final}"
+                else:
+                    image_data_uri = ""
+            else:
+                image_data_uri = ""
+            
+            st.markdown(f"Interactive Element")
+            st.markdown(
+                f"""
+                <div style="position:relative; display:block; width:100%; max-width:960px; margin:0 auto;">
+                    <img src="{image_data_uri}" style="width:100%; border-radius:18px;">
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            
+            # Interactive MCQ below the image
+            st.markdown("---")
+            st.subheader("Answer the Question")
+            
+            # Display question
+            st.markdown(f"**{mcq['question']}**")
+            
+            # Display options as clickable buttons in vertical layout
+            preview_selected = st.session_state.get("preview_mcq_selected", None)
+            
+            for opt_key in ["A", "B", "C", "D"]:
+                opt_text = mcq['options'][opt_key]
+                is_correct = opt_key == mcq.get("correct_answer", "")
+                button_type = "primary" if preview_selected == opt_key else "secondary"
+                
+                if st.button(f"{opt_key}. {opt_text}", key=f"preview_mcq_option_{opt_key}", use_container_width=True, type=button_type):
+                    st.session_state["preview_mcq_selected"] = opt_key
+                    st.rerun()
+            
+            # Show feedback if option selected
+            if preview_selected and "feedback" in mcq:
+                feedback_text = mcq["feedback"].get(preview_selected, "")
+                is_correct = preview_selected == mcq.get("correct_answer", "")
+                feedback_color = "#7DAF42" if is_correct else "#C41230"
+                st.markdown(f"""
+                <div style="
+                    background-color: {'rgba(125, 175, 66, 0.1)' if is_correct else 'rgba(196, 18, 48, 0.1)'};
+                    border-left: 4px solid {feedback_color};
+                    padding: 1rem;
+                    border-radius: 8px;
+                    margin-top: 1rem;
+                ">
+                    <strong style="color: {feedback_color};">
+                        {'✓ Correct!' if is_correct else '✗ Incorrect'}
+                    </strong>
+                    <p style="margin-top: 0.5rem; margin-bottom: 0;">{html.escape(feedback_text)}</p>
+                </div>
+                """, unsafe_allow_html=True)
+    else:
+        caption = screens[idx].get("caption", "")
+        image_b64 = ""
+        if idx < len(images) and images[idx]:
+            image_b64 = images[idx].get("image_b64", "")
+        image_data_uri = f"data:image/png;base64,{image_b64}" if image_b64 else ""
     
     if st.session_state.get("should_save_composited", False):
         output_folder = _save_composited_images(screens, images)
@@ -1696,33 +2686,36 @@ def step_final_preview():
             folder_name = f"{course_title}_{module_title}_all_files.zip".replace(" ", "_")
             st.download_button("Download All Files", zip_buffer.getvalue(), folder_name, "application/zip")
 
-    st.markdown(
-        f"Captions and image descriptions remain available in `screens.json`. Right click and press 'Save Image As...' to save the image to your computer."
-    )
-    st.markdown(f"Screen {idx + 1} of {len(screens)}")
+    if not viewing_interactive:
+        st.markdown(
+            f"Captions and image descriptions remain available in `screens.json`. Right click and press 'Save Image As...' to save the image to your computer."
+        )
+        st.markdown(f"Screen {idx + 1} of {total_items}")
 
-    st.markdown(
-        f"""
-        <div style="position:relative; display:block; width:100%; max-width:960px; margin:0 auto;">
-            <img src="{image_data_uri}" style="width:100%; border-radius:18px;">
-            <div style="
-                position:absolute;
-                left:24px;
-                right:24px;
-                bottom:24px;
-                background:rgba(255,255,255,0.94);
-                border-radius:14px;
-                padding:18px 22px;
-                box-shadow:0 8px 24px rgba(0,0,0,0.2);
-                font-size:1rem;
-                line-height:1.55;
-                color:#121212;">
-                {html.escape(caption)}
+        st.markdown(
+            f"""
+            <div style="position:relative; display:block; width:100%; max-width:960px; margin:0 auto;">
+                    <img src="{image_data_uri}" style="width:100%; border-radius:18px;">
+                <div style="
+                    position:absolute;
+                    left:24px;
+                    right:24px;
+                    bottom:24px;
+                    background:rgba(255,255,255,0.94);
+                    border-radius:14px;
+                    padding:18px 22px;
+                    box-shadow:0 8px 24px rgba(0,0,0,0.2);
+                    font-size:1rem;
+                    line-height:1.55;
+                    color:#121212;">
+                    {html.escape(caption)}
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(f"Interactive Element ({total_items} of {total_items})")
 
     # whitespace between image and buttons
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
@@ -1748,9 +2741,9 @@ def step_final_preview():
 
     with cols[2]:
         st.button("▶", key="preview_next",
-                disabled=idx >= len(screens) - 1,
+                disabled=idx >= total_items - 1,
                 use_container_width=True,
-                on_click=_go_next, args=(len(screens),))
+                on_click=_go_next, args=(total_items,))
 
     with cols[3]:
         # st.markdown("<div class='ace-nav-back'>", unsafe_allow_html=True)
